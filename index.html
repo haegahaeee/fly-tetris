@@ -2,80 +2,265 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Human vs. MaleCNS FlyTris</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Human vs. MaleCNS FlyTris Ultimate Battle</title>
     <style>
         body {
-            background-color: #121212;
+            background-color: #0b0b14;
             color: #e0e0e0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            overflow-x: hidden;
+            touch-action: manipulation;
         }
-        h1 { margin-bottom: 5px; font-size: 1.8rem; color: #bb86fc; }
-        .subtitle { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
-        .container { display: flex; gap: 40px; }
-        .board-box {
-            text-align: center;
-            background: #1e1e1e;
+
+        /* スタート画面モーダル */
+        #start-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 11, 20, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+        #start-screen h1 {
+            color: #bb86fc;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(187,134,252,0.5);
+        }
+        #start-screen p {
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+        .mode-btn {
+            background: linear-gradient(135deg, #6200ee, #bb86fc);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            width: 280px;
+            box-shadow: 0 4px 15px rgba(98, 0, 238, 0.4);
+            transition: transform 0.1s;
+        }
+        .mode-btn:active { transform: scale(0.95); }
+
+        /* ゲームメインレイアウト */
+        #game-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 540px;
+            padding: 0 10px;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #03dac6;
+        }
+        .battle-arena {
+            display: flex;
+            gap: 20px;
+            background: #161622;
             padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+            border: 2px solid #2a2a3d;
         }
-        canvas { border: 2px solid #333; background-color: #000; display: block; margin: 0 auto; }
-        .score { margin-top: 10px; font-size: 1.1rem; font-weight: bold; }
+        .player-panel {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        .side-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .mini-container {
+            background: #0f0f17;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 5px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #888;
+        }
+        canvas.mini-canvas {
+            background: #000;
+            display: block;
+            margin: 2px auto 0 auto;
+        }
+        
+        .main-board {
+            border: 2px solid #444;
+            background-color: #000;
+            display: block;
+        }
+        .panel-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+        .player-title { color: #03dac6; }
+        .ai-title { color: #ff7597; }
+
+        .score-board {
+            margin-top: 6px;
+            font-size: 0.95rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* スマホ用コントロールボタン */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .ctrl-btn {
+            flex: 1;
+            background: #22223b;
+            color: #bb86fc;
+            border: 2px solid #bb86fc;
+            padding: 12px 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ctrl-btn:active { background: #bb86fc; color: #121212; }
+
+        /* リザルト画面 */
         #result-modal {
             display: none;
             position: fixed;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            background: #222;
+            background: #1a1a26;
             border: 2px solid #bb86fc;
             padding: 30px;
-            border-radius: 12px;
+            border-radius: 15px;
             text-align: center;
-            box-shadow: 0 0 30px rgba(187, 134, 252, 0.4);
+            box-shadow: 0 0 40px rgba(187, 134, 252, 0.5);
             z-index: 100;
+            width: 85%;
+            max-width: 340px;
         }
-        #result-modal h2 { margin-top: 0; color: #03dac6; }
+        #result-modal h2 { margin-top: 0; color: #03dac6; font-size: 1.6rem; }
+        #result-modal p { font-size: 1.05rem; line-height: 1.5; color: #ddd; }
         #result-modal button {
             background: #bb86fc; color: #121212;
-            border: none; padding: 10px 20px; font-size: 1rem;
-            font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 15px;
+            border: none; padding: 12px 20px; font-size: 1rem;
+            font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 20px;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .controls { display: none; } /* PCではキーボード操作を主とする */
         }
     </style>
 </head>
 <body>
 
-    <h1>Human vs. MaleCNS FlyTris</h1>
-    <div class="subtitle">Dopamine-Gated Mushroom Body Connectome Opponent</div>
+    <!-- スタート画面（モード選択） -->
+    <div id="start-screen">
+        <h1>FlyTris Battle Arena</h1>
+        <p>Human vs. MaleCNS Connectome AI</p>
+        <button class="mode-btn" onclick="startGame('normal')">通常対戦 (時間無制限)</button>
+        <button class="mode-btn" onclick="startGame('quick')">クイック対戦 (制限1分半)</button>
+        <button class="mode-btn" onclick="startGame('gachi')">ガチ対戦 (妨害ミノ発生)</button>
+    </div>
 
-    <div class="container">
-        <div class="board-box">
-            <h2>Player</h2>
-            <canvas id="playerCanvas" width="200" height="400"></canvas>
-            <div class="score">Score: <span id="playerScore">0</span></div>
+    <!-- ゲームプレイ画面 -->
+    <div id="game-container">
+        <div class="top-bar">
+            <span id="mode-display">Mode: Normal</span>
+            <span id="timer-display">--:--</span>
         </div>
-        <div class="board-box">
-            <h2>Fly AI (MaleCNS v1.0)</h2>
-            <canvas id="aiCanvas" width="200" height="400"></canvas>
-            <div class="score">Reward: <span id="aiRewardDisplay">0.0</span></div>
+
+        <div class="battle-arena">
+            <!-- プレイヤー側パネル (左) -->
+            <div class="player-panel">
+                <div class="side-box">
+                    <div class="mini-container">HOLD<canvas id="playerHoldCanvas" width="50" height="50" class="mini-canvas"></canvas></div>
+                </div>
+                <div>
+                    <div class="panel-title player-title">PLAYER</div>
+                    <canvas id="playerCanvas" width="200" height="400" class="main-board"></canvas>
+                    <div class="score-board">Score: <span id="playerScore">0</span></div>
+                </div>
+                <div class="side-box">
+                    <div class="mini-container">NEXT<canvas id="playerNextCanvas" width="50" height="150" class="mini-canvas"></canvas></div>
+                </div>
+            </div>
+
+            <!-- ハエAI側パネル (右) -->
+            <div class="player-panel">
+                <div class="side-box">
+                    <div class="mini-container">HOLD<canvas id="aiHoldCanvas" width="50" height="50" class="mini-canvas"></canvas></div>
+                </div>
+                <div>
+                    <div class="panel-title ai-title">Fly AI (MaleCNS)</div>
+                    <canvas id="aiCanvas" width="200" height="400" class="main-board"></canvas>
+                    <div class="score-board">Score: <span id="aiScore">0</span></div>
+                </div>
+                <div class="side-box">
+                    <div class="mini-container">NEXT<canvas id="aiNextCanvas" width="50" height="150" class="mini-canvas"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- スマホ・タブレット用タッチ操作ボタン -->
+        <div class="controls">
+            <div class="control-row">
+                <button class="ctrl-btn" onclick="playerMove('left')">◀ 左</button>
+                <button class="ctrl-btn" onclick="playerRotate()">🔄 回転</button>
+                <button class="ctrl-btn" onclick="playerMove('right')">右 ▶</button>
+            </div>
+            <div class="control-row">
+                <button class="ctrl-btn" onclick="playerMove('down')" style="flex: 2;">⬇ ソフトドロップ</button>
+                <button class="ctrl-btn" onclick="playerHardDrop()" style="flex: 1; background: #6200ee;">⚡ ハード</button>
+            </div>
         </div>
     </div>
 
+    <!-- リザルト画面 -->
     <div id="result-modal">
         <h2 id="result-title">Game Over</h2>
         <p id="result-text">決着がつきました</p>
-        <button onclick="location.reload()">もう一度プレイ</button>
+        <button onclick="location.reload()">タイトルに戻る</button>
     </div>
 
 <script>
-    // ⚠️ Colab等で発行された ngrok の公開リンクに書き換えてください
-    const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev"";
+    // ⚠️ Python側（Colab等）の ngrok 公開リンクに書き換えてください
+    const BACKEND_URL = "https://YOUR_NGROK_URL_HERE/predict";
 
     const ROWS = 20;
     const COLS = 10;
@@ -83,37 +268,55 @@
 
     const COLORS = [
         null, '#FF0D72', '#0DC2FF', '#0DFF72',
-        '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'
+        '#F538FF', '#FF8E0D', '#FFE138', '#3877FF', '#555555'
     ];
 
     const SHAPES = [
         [],
-        [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
-        [[2,0,0],[2,2,2],[0,0,0]],
-        [[0,0,3],[3,3,3],[0,0,0]],
-        [[4,4],[4,4]],
-        [[0,5,5],[5,5,0],[0,0,0]],
-        [[0,6,0],[6,6,6],[0,0,0]],
-        [[7,7,0],[0,7,7],[0,0,0]]
+        [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
+        [[2,0,0],[2,2,2],[0,0,0]],                  // J
+        [[0,0,3],[3,3,3],[0,0,0]],                  // L
+        [[4,4],[4,4]],                              // O
+        [[0,5,5],[5,5,0],[0,0,0]],                  // S
+        [[0,6,0],[6,6,6],[0,0,0]],                  // T
+        [[7,7,0],[0,7,7],[0,0,0]],                  // Z
+        [[8]]                                       // 8: 妨害ブロック (ガチ対戦用)
     ];
 
+    let gameMode = 'normal'; // 'normal', 'quick', 'gachi'
+    let gameInterval = null;
+    let aiLoopTimeout = null;
+    let timerSeconds = 90; // クイック対戦用 (1分半)
+    let timerInterval = null;
     let gameOver = false;
 
     class TetrisGame {
-        constructor(canvasId, scoreId, isAI = false) {
+        constructor(canvasId, scoreId, nextCanvasId, holdCanvasId, isAI = false) {
             this.canvas = document.getElementById(canvasId);
             this.ctx = this.canvas.getContext('2d');
             this.scoreElement = document.getElementById(scoreId);
+            this.nextCtx = document.getElementById(nextCanvasId).getContext('2d');
+            this.holdCtx = document.getElementById(holdCanvasId).getContext('2d');
             this.isAI = isAI;
             
             this.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
             this.score = 0;
+            this.lines = 0;
             this.currentPiece = this.spawnPiece();
+            this.nextQueue = [this.spawnRandomType(), this.spawnRandomType(), this.spawnRandomType()];
+            this.holdPiece = null;
+            this.canHold = true;
             this.aiReward = 0.0;
         }
 
+        spawnRandomType() {
+            return Math.floor(Math.random() * 7) + 1;
+        }
+
         spawnPiece() {
-            const typeId = Math.floor(Math.random() * 6) + 1;
+            const typeId = this.nextQueue.shift();
+            this.nextQueue.push(this.spawnRandomType());
+            this.drawSideBoxes();
             return {
                 shape: SHAPES[typeId],
                 typeId: typeId,
@@ -130,7 +333,7 @@
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     if (this.grid[r][c] > 0) {
-                        this.drawBlock(c, r, COLORS[this.grid[r][c]]);
+                        this.drawBlock(this.ctx, c, r, COLORS[this.grid[r][c]], BLOCK_SIZE);
                     }
                 }
             }
@@ -140,16 +343,52 @@
                 for (let r = 0; r < shape.length; r++) {
                     for (let c = 0; c < shape[r].length; c++) {
                         if (shape[r][c] > 0) {
-                            this.drawBlock(this.currentPiece.x + c, this.currentPiece.y + r, COLORS[this.currentPiece.typeId]);
+                            this.drawBlock(this.ctx, this.currentPiece.x + c, this.currentPiece.y + r, COLORS[this.currentPiece.typeId], BLOCK_SIZE);
                         }
                     }
                 }
             }
         }
 
-        drawBlock(x, y, color) {
-            this.ctx.fillStyle = color;
-            this.ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+        drawBlock(ctx, x, y, color, size) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * size, y * size, size - 1, size - 1);
+        }
+
+        drawSideBoxes() {
+            // NEXT描画 (3つ表示)
+            this.nextCtx.fillStyle = '#0f0f17';
+            this.nextCtx.fillRect(0, 0, 50, 150);
+            for (let i = 0; i < 3; i++) {
+                let typeId = this.nextQueue[i];
+                let shape = SHAPES[typeId];
+                let color = COLORS[typeId];
+                let startY = i * 45 + 5;
+                for (let r = 0; r < shape.length; r++) {
+                    for (let c = 0; c < shape[r].length; c++) {
+                        if (shape[r][c] > 0) {
+                            this.nextCtx.fillStyle = color;
+                            this.nextCtx.fillRect(10 + c * 10, startY + r * 10, 9, 9);
+                        }
+                    }
+                }
+            }
+
+            // HOLD描画
+            this.holdCtx.fillStyle = '#0f0f17';
+            this.holdCtx.fillRect(0, 0, 50, 50);
+            if (this.holdPiece) {
+                let shape = SHAPES[this.holdPiece];
+                let color = COLORS[this.holdPiece];
+                for (let r = 0; r < shape.length; r++) {
+                    for (let c = 0; c < shape[r].length; c++) {
+                        if (shape[r][c] > 0) {
+                            this.holdCtx.fillStyle = color;
+                            this.holdCtx.fillRect(10 + c * 10, 10 + r * 10, 9, 9);
+                        }
+                    }
+                }
+            }
         }
 
         checkCollision(nx, ny, shape) {
@@ -172,7 +411,7 @@
                 for (let c = 0; c < shape[r].length; c++) {
                     if (shape[r][c] > 0) {
                         if (this.currentPiece.y + r < 0) {
-                            triggerResultModal(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
+                            triggerGameOver(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
                             return;
                         }
                         this.grid[this.currentPiece.y + r][this.currentPiece.x + c] = this.currentPiece.typeId;
@@ -181,8 +420,9 @@
             }
             this.clearLines();
             this.currentPiece = this.spawnPiece();
+            this.canHold = true;
             if (this.checkCollision(this.currentPiece.x, this.currentPiece.y, this.currentPiece.shape)) {
-                triggerResultModal(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
+                triggerGameOver(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
             }
         }
 
@@ -197,15 +437,54 @@
                 }
             }
             if (linesCleared > 0) {
-                if (!this.isAI) {
-                    this.score += linesCleared * 100;
-                    this.scoreElement.innerText = this.score;
+                this.lines += linesCleared;
+                this.score += linesCleared * 100 * linesCleared;
+                this.scoreElement.innerText = this.score;
+
+                if (this.isAI) {
+                    this.aiReward = linesCleared * 15.0;
                 } else {
-                    this.aiReward = linesCleared * 10.0;
+                    // プレイヤーがラインを消したら、ガチ対戦モードなら相手に妨害ブロックを送り込む！
+                    if (gameMode === 'gachi' && linesCleared >= 2) {
+                        ai.injectGarbage(linesCleared - 1);
+                    }
                 }
             } else {
                 this.aiReward = -0.2;
             }
+        }
+
+        injectGarbage(count) {
+            for (let i = 0; i < count; i++) {
+                this.grid.shift();
+                let garbageRow = Array(COLS).fill(8);
+                // ランダムに1箇所だけ穴を開ける
+                let emptyCol = Math.floor(Math.random() * COLS);
+                garbageRow[emptyCol] = 0;
+                this.grid.push(garbageRow);
+            }
+            this.draw();
+        }
+
+        hold() {
+            if (!this.canHold || gameOver) return;
+            if (this.holdPiece === null) {
+                this.holdPiece = this.currentPiece.typeId;
+                this.currentPiece = this.spawnPiece();
+            } else {
+                let temp = this.currentPiece.typeId;
+                this.currentPiece = {
+                    shape: SHAPES[this.holdPiece],
+                    typeId: this.holdPiece,
+                    x: Math.floor(COLS / 2) - Math.floor(SHAPES[this.holdPiece][0].length / 2),
+                    y: 0,
+                    rot: 0
+                };
+                this.holdPiece = temp;
+            }
+            this.canHold = false;
+            this.drawSideBoxes();
+            this.draw();
         }
 
         moveDown() {
@@ -217,42 +496,129 @@
             }
             this.draw();
         }
+
+        hardDrop() {
+            if (gameOver) return;
+            while (!this.checkCollision(this.currentPiece.x, this.currentPiece.y + 1, this.currentPiece.shape)) {
+                this.currentPiece.y++;
+                this.score += 2; // ハードドロップボーナス
+            }
+            this.scoreElement.innerText = this.score;
+            this.merge();
+            this.draw();
+        }
     }
 
-    const player = new TetrisGame('playerCanvas', 'playerScore', false);
-    const ai = new TetrisGame('aiCanvas', 'aiRewardDisplay', true);
+    const player = new TetrisGame('playerCanvas', 'playerScore', 'playerNextCanvas', 'playerHoldCanvas', false);
+    const ai = new TetrisGame('aiCanvas', 'aiScore', 'aiNextCanvas', 'aiHoldCanvas', true);
 
-    document.addEventListener('keydown', e => {
-        if (gameOver) return;
-        if (e.key === 'ArrowLeft') {
-            if (!player.checkCollision(player.currentPiece.x - 1, player.currentPiece.y, player.currentPiece.shape)) player.currentPiece.x--;
-        } else if (e.key === 'ArrowRight') {
-            if (!player.checkCollision(player.currentPiece.x + 1, player.currentPiece.y, player.currentPiece.shape)) player.currentPiece.x++;
-        } else if (e.key === 'ArrowDown') {
-            player.moveDown();
-        } else if (e.key === 'ArrowUp') {
-            let shape = player.currentPiece.shape;
-            let rotated = shape[0].map((_, i) => shape.map(row => row[i]).reverse());
-            if (!player.checkCollision(player.currentPiece.x, player.currentPiece.y, rotated)) {
-                player.currentPiece.shape = rotated;
+    function startGame(mode) {
+        gameMode = mode;
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-container').style.display = 'flex';
+        
+        let modeName = "通常対戦 (無制限)";
+        if (mode === 'quick') {
+            modeName = "クイック対戦 (1分半)";
+            startTimer();
+        } else if (mode === 'gachi') {
+            modeName = "ガチ対戦 (妨害ミノ有)";
+            // ガチ対戦では30秒ごとに定期妨害
+            setInterval(() => {
+                if (!gameOver) {
+                    player.injectGarbage(1);
+                    ai.injectGarbage(1);
+                }
+            }, 30000);
+        }
+        document.getElementById('mode-display').innerText = `Mode: ${modeName}`;
+
+        player.draw();
+        ai.draw();
+        
+        // 落下ループ
+        gameInterval = setInterval(() => {
+            if (!gameOver) player.moveDown();
+        }, 500);
+
+        setTimeout(aiLoop, 1000);
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            if (gameOver) return;
+            timerSeconds--;
+            let mins = Math.floor(timerSeconds / 60);
+            let secs = timerSeconds % 60;
+            document.getElementById('timer-display').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+                // タイムアップ時の勝敗判定（スコア勝負）
+                let resultMsg = player.score > ai.score ? "Time Up! Player Win (Higher Score)" : "Time Up! Fly Win (Higher Score)";
+                triggerResultModal(resultMsg);
             }
+        }, 1000);
+    }
+
+    // 操作用ヘルパー
+    function playerMove(dir) {
+        if (gameOver) return;
+        if (dir === 'left') {
+            if (!player.checkCollision(player.currentPiece.x - 1, player.currentPiece.y, player.currentPiece.shape)) player.currentPiece.x--;
+        } else if (dir === 'right') {
+            if (!player.checkCollision(player.currentPiece.x + 1, player.currentPiece.y, player.currentPiece.shape)) player.currentPiece.x++;
+        } else if (dir === 'down') {
+            player.moveDown();
         }
         player.draw();
+    }
+
+    function playerRotate() {
+        if (gameOver) return;
+        let shape = player.currentPiece.shape;
+        let rotated = shape[0].map((_, i) => shape.map(row => row[i]).reverse());
+        if (!player.checkCollision(player.currentPiece.x, player.currentPiece.y, rotated)) {
+            player.currentPiece.shape = rotated;
+        }
+        player.draw();
+    }
+
+    function playerHardDrop() {
+        player.hardDrop();
+    }
+
+    // キーボード操作対応
+    document.addEventListener('keydown', e => {
+        if (gameOver || document.getElementById('start-screen').style.display !== 'none') return;
+        if (e.key === 'ArrowLeft') playerMove('left');
+        else if (e.key === 'ArrowRight') playerMove('right');
+        else if (e.key === 'ArrowDown') playerMove('down');
+        else if (e.key === 'ArrowUp') playerRotate();
+        else if (e.key === ' ') playerHardDrop();
+        else if (e.key === 'c' || e.key === 'C') player.hold();
     });
 
-    setInterval(() => {
-        if (!gameOver) player.moveDown();
-    }, 500);
-
+    // ハエAIの思考ループ（ngrok警告バイパス付き）
     async function aiLoop() {
         if (gameOver) return;
         try {
             const response = await fetch(BACKEND_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                },
                 body: JSON.stringify({ grid: ai.grid, reward: ai.aiReward })
             });
-            const data = await response.json();
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error("ngrok警告ページの可能性あり");
+                return;
+            }
+
             if (data && typeof data.bestX !== 'undefined') {
                 ai.currentPiece.x = data.bestX;
                 for (let i = 0; i < data.bestRot; i++) {
@@ -263,7 +629,7 @@
                     ai.currentPiece.y++;
                 }
                 ai.merge();
-                document.getElementById('aiRewardDisplay').innerText = ai.aiReward.toFixed(1);
+                document.getElementById('aiScore').innerText = ai.score;
             }
         } catch (err) {
             console.error("AI通信エラー:", err);
@@ -275,14 +641,14 @@
 
     function triggerResultModal(message) {
         gameOver = true;
-        document.getElementById('result-title').innerText = "Game Over";
-        document.getElementById('result-text').innerText = message;
+        clearInterval(gameInterval);
+        clearInterval(timerInterval);
+        
+        let detailText = `${message}<br><br>【最終スコア】<br>Player: ${player.score} pts<br>Fly AI: ${ai.score} pts`;
+        document.getElementById('result-title').innerText = "Battle Finished";
+        document.getElementById('result-text').innerHTML = detailText;
         document.getElementById('result-modal').style.display = 'block';
     }
-
-    player.draw();
-    ai.draw();
-    setTimeout(aiLoop, 1000);
 </script>
 
 </body>
