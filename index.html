@@ -19,7 +19,7 @@
             min-height: 100vh;
             margin: 0;
             padding: 5px;
-            overflow: hidden; /* はみ出しを完全に防止 */
+            overflow: hidden;
             touch-action: manipulation;
         }
 
@@ -84,7 +84,6 @@
             color: #03dac6;
         }
 
-        /* 対戦アリーナ: 常に横並びを維持 */
         .battle-arena {
             display: flex;
             flex-direction: row; 
@@ -138,8 +137,8 @@
             border: 2px solid #444;
             background-color: #000;
             display: block;
-            width: 100px;   /* スマホの横幅に収まるよう自動縮小 */
-            height: 200px;
+            width: 120px;
+            height: 240px;
         }
         .panel-title {
             text-align: center;
@@ -157,7 +156,7 @@
             font-weight: bold;
         }
 
-        /* スマホ用コントロールボタン（コンパクト化） */
+        /* スマホ用操作ボタン */
         .controls {
             display: flex;
             flex-direction: column;
@@ -211,7 +210,6 @@
             width: 100%;
         }
 
-        /* PC画面（横幅768px以上）では少しサイズを拡大 */
         @media (min-width: 768px) {
             body { padding: 20px; overflow: auto; }
             .battle-arena { max-width: 560px; padding: 15px; gap: 15px; }
@@ -222,7 +220,7 @@
             .panel-title { font-size: 0.95rem; }
             .score-board { font-size: 0.95rem; }
             .mini-container { font-size: 0.75rem; }
-            .controls { display: none; } /* PCではキーボード操作 */
+            .controls { display: none; }
         }
     </style>
 </head>
@@ -299,7 +297,7 @@
 
 <script>
     // ⚠️ Python側（Colab等）の ngrok 公開リンクに書き換えてください
-    const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+    const BACKEND_URL = "https://YOUR_NGROK_URL_HERE/predict";
 
     const ROWS = 20;
     const COLS = 10;
@@ -327,6 +325,7 @@
     let timerSeconds = 90;
     let timerInterval = null;
     let gameOver = false;
+    let player, ai;
 
     class TetrisGame {
         constructor(canvasId, scoreId, nextCanvasId, holdCanvasId, isAI = false) {
@@ -340,8 +339,8 @@
             this.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
             this.score = 0;
             this.lines = 0;
-            this.currentPiece = this.spawnPiece();
             this.nextQueue = [this.spawnRandomType(), this.spawnRandomType(), this.spawnRandomType()];
+            this.currentPiece = this.spawnPiece();
             this.holdPiece = null;
             this.canHold = true;
             this.aiReward = 0.0;
@@ -365,6 +364,7 @@
         }
 
         draw() {
+            if (!this.ctx) return;
             this.ctx.fillStyle = '#000';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -524,14 +524,15 @@
         }
     }
 
-    const player = new TetrisGame('playerCanvas', 'playerScore', 'playerNextCanvas', 'playerHoldCanvas', false);
-    const ai = new TetrisGame('aiCanvas', 'aiScore', 'aiNextCanvas', 'aiHoldCanvas', true);
-
     function startGame(mode) {
         gameMode = mode;
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'flex';
         
+        // ゲームインスタンスをここで確実に生成して初期化
+        player = new TetrisGame('playerCanvas', 'playerScore', 'playerNextCanvas', 'playerHoldCanvas', false);
+        ai = new TetrisGame('aiCanvas', 'aiScore', 'aiNextCanvas', 'aiHoldCanvas', true);
+
         let modeName = "通常対戦 (無制限)";
         if (mode === 'quick') {
             modeName = "クイック対戦 (1分半)";
@@ -573,7 +574,7 @@
     }
 
     function playerMove(dir) {
-        if (gameOver) return;
+        if (gameOver || !player) return;
         if (dir === 'left') {
             if (!player.checkCollision(player.currentPiece.x - 1, player.currentPiece.y, player.currentPiece.shape)) player.currentPiece.x--;
         } else if (dir === 'right') {
@@ -585,7 +586,7 @@
     }
 
     function playerRotate() {
-        if (gameOver) return;
+        if (gameOver || !player) return;
         let shape = player.currentPiece.shape;
         let rotated = shape[0].map((_, i) => shape.map(row => row[i]).reverse());
         if (!player.checkCollision(player.currentPiece.x, player.currentPiece.y, rotated)) {
@@ -595,11 +596,11 @@
     }
 
     function playerQuickDrop() {
-        player.quickDrop();
+        if (player) player.quickDrop();
     }
 
     document.addEventListener('keydown', e => {
-        if (gameOver || document.getElementById('start-screen').style.display !== 'none') return;
+        if (gameOver || document.getElementById('start-screen').style.display !== 'none' || !player) return;
         if (e.key === 'ArrowLeft') playerMove('left');
         else if (e.key === 'ArrowRight') playerMove('right');
         else if (e.key === 'ArrowDown') playerMove('down');
@@ -609,7 +610,7 @@
     });
 
     async function aiLoop() {
-        if (gameOver) return;
+        if (gameOver || !ai) return;
         try {
             const response = await fetch(BACKEND_URL, {
                 method: 'POST',
@@ -653,7 +654,9 @@
         clearInterval(gameInterval);
         clearInterval(timerInterval);
         
-        let detailText = `${message}<br><br>【最終スコア】<br>Player: ${player.score} pts<br>Fly AI: ${ai.score} pts`;
+        let pScore = player ? player.score : 0;
+        let aScore = ai ? ai.score : 0;
+        let detailText = `${message}<br><br>【最終スコア】<br>Player: ${pScore} pts<br>Fly AI: ${aScore} pts`;
         document.getElementById('result-title').innerText = "Battle Finished";
         document.getElementById('result-text').innerHTML = detailText;
         document.getElementById('result-modal').style.display = 'block';
