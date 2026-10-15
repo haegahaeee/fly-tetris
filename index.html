@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Fly-Brain Tetris (Connectome Battle)</title>
+    <title>Fly-Brain Tetris - Ultimate Connectome Battle</title>
     <style>
         body {
-            background-color: #0f172a;
+            background-color: #07090e;
             color: #f8fafc;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
@@ -17,115 +17,140 @@
             overflow-x: hidden;
         }
         h1 {
-            margin: 5px 0;
-            font-size: 1.5rem;
+            margin: 5px 0 10px 0;
+            font-size: 1.4rem;
             color: #38bdf8;
             text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
         }
-        .main-container {
+        .mode-selector {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .mode-btn {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #475569;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            background: #0284c7;
+            color: white;
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+        .battle-container {
             display: flex;
             gap: 20px;
-            background: #1e293b;
-            padding: 20px;
+            background: #111827;
+            padding: 15px;
             border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 1px solid #334155;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            border: 1px solid #1f2937;
+        }
+        .player-side, .ai-side {
+            display: flex;
+            gap: 10px;
         }
         .side-panel {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            width: 100px;
+            gap: 10px;
+            width: 80px;
         }
         .panel-box {
-            background: #0f172a;
-            border: 2px solid #475569;
+            background: #030712;
+            border: 2px solid #374151;
             border-radius: 8px;
-            padding: 8px;
+            padding: 6px;
             text-align: center;
         }
         .panel-box h3 {
-            margin: 0 0 5px 0;
-            font-size: 0.8rem;
-            color: #94a3b8;
+            margin: 0 0 4px 0;
+            font-size: 0.7rem;
+            color: #9ca3af;
         }
         canvas.mini-canvas {
-            background: #020617;
+            background: #000;
             border-radius: 4px;
             display: block;
             margin: 0 auto;
         }
-        .board-container {
+        .board-wrapper {
             position: relative;
-            background: #020617;
-            border: 3px solid #38bdf8;
+            background: #000;
+            border: 3px solid #374151;
             border-radius: 8px;
-            box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.3);
         }
-        canvas#tetris {
+        .board-wrapper.player-board { border-color: #38bdf8; box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.2); }
+        .board-wrapper.ai-board { border-color: #ec4899; box-shadow: inset 0 0 15px rgba(236, 72, 153, 0.2); }
+        
+        canvas.tetris-canvas {
             display: block;
         }
-        .info-panel {
+        .board-title {
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .player-title { color: #38bdf8; }
+        .ai-title { color: #ec4899; }
+
+        .control-panel {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
             width: 180px;
+            justify-content: space-between;
         }
-        .score-box {
-            background: #0f172a;
+        .info-box {
+            background: #030712;
             border: 2px solid #38bdf8;
             border-radius: 8px;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
         }
-        .score-box h3 { margin: 0; font-size: 0.8rem; color: #94a3b8; }
-        .score-box p { margin: 5px 0 0 0; font-size: 1.3rem; font-weight: bold; color: #facc15; }
-        
-        /* ハエの脳＆コントローラー演出エリア */
-        .fly-animation-box {
-            background: #020617;
+        .info-box h3 { margin: 0; font-size: 0.7rem; color: #9ca3af; }
+        .info-box p { margin: 4px 0 0 0; font-size: 1.1rem; font-weight: bold; color: #facc15; }
+
+        /* ご提示いただいた脳画像のリアルアニメーション演出 */
+        .brain-animation-box {
+            background: #030712;
             border: 2px solid #ec4899;
             border-radius: 8px;
             padding: 8px;
             text-align: center;
-            position: relative;
-        }
-        .fly-animation-box h3 { margin: 0 0 5px 0; font-size: 0.75rem; color: #f472b6; }
-        
-        /* 脳のパルスアニメーション */
-        .brain-visual {
-            width: 100%;
-            height: 70px;
-            background: radial-gradient(circle, #0369a1 0%, #020617 70%);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
             overflow: hidden;
-            border: 1px solid #0284c7;
         }
-        .brain-icon {
-            font-size: 2rem;
-            animation: pulse-brain 1.5s infinite alternate;
+        .brain-animation-box h3 { margin: 0 0 4px 0; font-size: 0.7rem; color: #f472b6; }
+        
+        .brain-image-container {
+            width: 100%;
+            height: 90px;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #be185d;
+            background: #000;
         }
-        @keyframes pulse-brain {
-            0% { transform: scale(0.9); filter: drop-shadow(0 0 2px #38bdf8); }
-            100% { transform: scale(1.1); filter: drop-shadow(0 0 10px #f43f5e); }
+        .brain-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            animation: brain-pulse-glow 3s infinite alternate ease-in-out;
+        }
+        @keyframes brain-pulse-glow {
+            0% { transform: scale(1); filter: brightness(0.9) drop-shadow(0 0 2px #ec4899); }
+            50% { transform: scale(1.06); filter: brightness(1.2) drop-shadow(0 0 10px #38bdf8); }
+            100% { transform: scale(1); filter: brightness(0.9) drop-shadow(0 0 2px #ec4899); }
         }
 
-        /* コントローラーをいじってるハエのアニメーション */
-        .fly-gamer {
-            font-size: 1.5rem;
-            margin-top: 4px;
-            animation: shake-controller 0.2s infinite alternate;
-        }
-        @keyframes shake-controller {
-            0% { transform: rotate(-3deg) translateY(0); }
-            100% { transform: rotate(3deg) translateY(-2px); }
-        }
-
-        .btn {
+        .btn-start {
             background: #0284c7;
             color: white;
             border: none;
@@ -134,96 +159,122 @@
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
+            text-align: center;
         }
-        .btn:hover { background: #0ea5e9; }
+        .btn-start:hover { background: #0ea5e9; }
     </style>
 </head>
 <body>
 
     <h1>🧠 Fly-Brain Tetris (Connectome Battle) 🎮</h1>
     
-    <div class="main-container">
-        <!-- 左パネル：Hold と ステータス -->
-        <div class="side-panel">
-            <div class="panel-box">
-                <h3>HOLD</h3>
-                <canvas id="holdCanvas" width="60" height="60" class="mini-canvas"></canvas>
+    <!-- 3つのモード選択 -->
+    <div class="mode-selector">
+        <button class="mode-btn active" id="modeNormal" onclick="setGameMode('normal')">Normal</button>
+        <button class="mode-btn" id="modeQuick" onclick="setGameMode('quick')">Quick (1:30)</button>
+        <button class="mode-btn" id="modeGachi" onclick="setGameMode('gachi')">Gachi (Garbage)</button>
+    </div>
+
+    <div class="battle-container">
+        <!-- プレイヤー側（左） -->
+        <div class="player-side">
+            <div class="side-panel">
+                <div class="panel-box">
+                    <h3>HOLD</h3>
+                    <canvas id="playerHold" width="50" height="50" class="mini-canvas"></canvas>
+                </div>
+                <div class="panel-box" style="flex-grow:1;">
+                    <h3>STATS</h3>
+                    <p id="playerLines" style="font-size:0.7rem; color:#38bdf8; margin:5px 0;">Lines: 0</p>
+                    <p id="timerDisplay" style="font-size:0.7rem; color:#facc15; margin:5px 0;">Time: --</p>
+                </div>
             </div>
-            <div class="score-box" style="padding: 6px;">
-                <h3>AI STATUS</h3>
-                <p id="aiState" style="font-size:0.75rem; color:#38bdf8;">待機中...</p>
+            <div>
+                <div class="board-title player-title">PLAYER (YOU)</div>
+                <div class="board-wrapper player-board">
+                    <canvas id="playerCanvas" width="200" height="440"></canvas>
+                </div>
+            </div>
+            <div class="side-panel">
+                <div class="panel-box" style="height: 150px;">
+                    <h3>NEXT (3)</h3>
+                    <canvas id="playerNext" width="50" height="135" class="mini-canvas"></canvas>
+                </div>
             </div>
         </div>
 
-        <!-- 中央：縦長ゲームボード -->
-        <div class="board-container">
-            <!-- 22行 x 10列（縦長に拡張） -->
-            <canvas id="tetris" width="200" height="440"></canvas>
-        </div>
-
-        <!-- 右パネル：Next（3個）＆ 脳・ハエ演出 ＆ スコア -->
-        <div class="info-panel">
-            <div class="panel-box">
-                <h3>NEXT (3連)</h3>
-                <canvas id="nextCanvas" width="60" height="180" class="mini-canvas"></canvas>
-            </div>
-
-            <div class="score-box">
-                <h3>SCORE</h3>
+        <!-- 中央コントロール＆脳アニメーションパネル -->
+        <div class="control-panel">
+            <div class="info-box">
+                <h3>BATTLE SCORE</h3>
                 <p id="score">0</p>
             </div>
 
-            <!-- ハエの脳＆コントローラー操作パネル -->
-            <div class="fly-animation-box">
-                <h3>FLY BRAIN (male-cns)</h3>
-                <div class="brain-visual">
-                    <div class="brain-icon">🧠</div>
+            <!-- ご提示いただいた脳画像のリアルアニメーション -->
+            <div class="brain-animation-box">
+                <h3>CONNECTOME AI</h3>
+                <div class="brain-image-container">
+                    <!-- ご提示いただいた脳画像の参照（またはデータURL） -->
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='100' fill='%231e293b'><rect width='200' height='100'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2338bdf8' font-size='12'>Janelia male-cns:v1.0</text></svg>" id="brainImg" alt="Fly Brain Connectome">
                 </div>
-                <div class="fly-gamer">🪰🕹️✨</div>
-                <div style="font-size: 0.65rem; color: #94a3b8; margin-top: 2px;">Hard-Drop Active</div>
+                <div id="aiState" style="font-size: 0.65rem; color: #f472b6; margin-top: 4px;">AI Standby</div>
             </div>
 
-            <button class="btn" onclick="startGame()">START BATTLE</button>
+            <button class="btn-start" onclick="startBattle()">START BATTLE</button>
+        </div>
+
+        <!-- ハエAI側（右） -->
+        <div class="ai-side">
+            <div>
+                <div class="board-title ai-title">FLY AI (male-cns)</div>
+                <div class="board-wrapper ai-board">
+                    <canvas id="aiCanvas" width="200" height="440"></canvas>
+                </div>
+            </div>
+            <div class="side-panel">
+                <div class="panel-box" style="height: 150px;">
+                    <h3>AI NEXT</h3>
+                    <canvas id="aiNext" width="50" height="135" class="mini-canvas"></canvas>
+                </div>
+                <div class="panel-box" style="flex-grow:1;">
+                    <h3>AI STATUS</h3>
+                    <p id="aiLines" style="font-size:0.7rem; color:#ec4899; margin:5px 0;">Lines: 0</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // BACKEND_URL（ご自身のngrokのURLに変更してください）
-        const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+        // ngrokバックエンドURL（必要に応じて書き換えてください）
+        const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev/predict";
 
-        const canvas = document.getElementById('tetris');
-        const ctx = canvas.getContext('2d');
-        const scale = 20; // 1ブロック 20px
-        ctx.scale(scale, scale);
-
-        const ROWS = 22; // 縦長に拡張
+        const scale = 20;
+        const ROWS = 22;
         const COLS = 10;
-        let arena = createMatrix(COLS, ROWS);
 
-        let score = 0;
-        let dropCounter = 0;
-        let dropInterval = 1000;
-        let lastTime = 0;
+        let gameMode = 'normal'; // 'normal', 'quick', 'gachi'
+        let battleActive = false;
+        let gameTimer = 90;
+        let timerInterval = null;
 
-        const player = {
-            pos: {x: 0, y: 0},
-            matrix: null,
-            score: 0,
-            hold: null,
-            canHold: true
-        };
+        // プレイヤーの状態
+        const pCanvas = document.getElementById('playerCanvas');
+        const pCtx = pCanvas.getContext('2d');
+        pCtx.scale(scale, scale);
+        let playerArena = createMatrix(COLS, ROWS);
+        let player = { pos: {x:0, y:0}, matrix: null, hold: null, canHold: true, score: 0, lines: 0 };
+        let playerNextQueue = [];
 
-        const nextQueue = []; // Next3つ保持用
+        // ハエAIの状態
+        const aiCanvas = document.getElementById('aiCanvas');
+        const aiCtx = aiCanvas.getContext('2d');
+        aiCtx.scale(scale, scale);
+        let aiArena = createMatrix(COLS, ROWS);
+        let ai = { pos: {x:0, y:0}, matrix: null, lines: 0 };
+        let aiNextQueue = [];
 
         const COLORS = [
-            null,
-            '#38bdf8', // I
-            '#facc15', // O
-            '#c084fc', // T
-            '#4ade80', // S
-            '#f87171', // Z
-            '#60a5fa', // J
-            '#fb923c'  // L
+            null, '#38bdf8', '#facc15', '#c084fc', '#4ade80', '#f87171', '#60a5fa', '#fb923c'
         ];
 
         function createMatrix(w, h) {
@@ -242,111 +293,106 @@
             if (type === 'Z') return [[5, 5, 0], [0, 5, 5], [0, 0, 0]];
         }
 
-        function drawMatrix(matrix, offset, context = ctx) {
+        function setGameMode(mode) {
+            gameMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+        }
+
+        function drawMatrix(matrix, offset, ctx) {
+            if (!matrix) return;
             matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) {
-                        context.fillStyle = COLORS[value];
-                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
-                        context.strokeStyle = '#020617';
-                        context.lineWidth = 0.05;
-                        context.strokeRect(x + offset.x, y + offset.y, 1, 1);
+                        ctx.fillStyle = COLORS[value];
+                        ctx.fillRect(x + offset.x, y + offset.y, 1, 1);
+                        ctx.strokeStyle = '#000';
+                        ctx.lineWidth = 0.05;
+                        ctx.strokeRect(x + offset.x, y + offset.y, 1, 1);
                     }
                 });
             });
         }
 
-        function drawMini(matrix, canvasEl, colorIndex) {
+        function drawMini(matrix, canvasEl, colorIdx) {
             const mCtx = canvasEl.getContext('2d');
-            mCtx.fillStyle = '#020617';
+            mCtx.fillStyle = '#030712';
             mCtx.fillRect(0, 0, canvasEl.width, canvasEl.height);
             if (!matrix) return;
-            const mScale = 15;
+            const mScale = 12;
             matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) {
-                        mCtx.fillStyle = COLORS[colorIndex || value];
+                        mCtx.fillStyle = COLORS[colorIdx || value];
                         mCtx.fillRect(x * mScale + 5, y * mScale + 5, mScale, mScale);
                     }
                 });
             });
         }
 
-        function draw() {
-            ctx.fillStyle = '#020617';
-            ctx.fillRect(0, 0, COLS, ROWS);
-            drawMatrix(arena, {x: 0, y: 0});
-            if (player.matrix) drawMatrix(player.matrix, player.pos);
-        }
-
-        function merge(arena, player) {
-            player.matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) {
-                        arena[y + player.pos.y][x + player.pos.x] = value;
-                    }
+        function drawQueue(queue, canvasEl) {
+            const mCtx = canvasEl.getContext('2d');
+            mCtx.fillStyle = '#030712';
+            mCtx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+            queue.forEach((matrix, idx) => {
+                if (!matrix) return;
+                const mScale = 10;
+                matrix.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) {
+                            mCtx.fillStyle = COLORS[value];
+                            mCtx.fillRect(x * mScale + 5, y * mScale + (idx * 40) + 5, mScale, mScale);
+                        }
+                    });
                 });
             });
         }
 
-        function rotate(matrix, dir) {
-            for (let y = 0; y < matrix.length; ++y) {
-                for (let x = 0; x < y; ++x) {
-                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-                }
-            }
-            if (dir > 0) matrix.forEach(row => row.reverse());
-            else matrix.reverse();
+        function draw() {
+            // Player Board
+            pCtx.fillStyle = '#000';
+            pCtx.fillRect(0, 0, COLS, ROWS);
+            drawMatrix(playerArena, {x:0, y:0}, pCtx);
+            drawMatrix(player.matrix, player.pos, pCtx);
+
+            // AI Board
+            aiCtx.fillStyle = '#000';
+            aiCtx.fillRect(0, 0, COLS, ROWS);
+            drawMatrix(aiArena, {x:0, y:0}, aiCtx);
+            drawMatrix(ai.matrix, ai.pos, aiCtx);
         }
 
-        function collide(arena, player) {
-            const m = player.matrix;
-            const o = player.pos;
-            for (let y = 0; y < m.length; ++y) {
-                for (let x = 0; x < m[y].length; ++x) {
-                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
+        // --- プレイヤー操作ロジック ---
         function playerDrop() {
             player.pos.y++;
-            if (collide(arena, player)) {
+            if (collide(playerArena, player)) {
                 player.pos.y--;
-                merge(arena, player);
-                playerReset();
-                arenaSweep();
+                merge(playerArena, player);
+                resetPlayerPiece();
+                checkLines(playerArena, 'player');
             }
-            dropCounter = 0;
         }
 
-        // ハエの急降下（ハードドロップ）機能
         function playerHardDrop() {
-            while (!collide(arena, player)) {
+            while (!collide(playerArena, player)) {
                 player.pos.y++;
             }
             player.pos.y--;
-            merge(arena, player);
-            playerReset();
-            arenaSweep();
-            dropCounter = 0;
+            merge(playerArena, player);
+            resetPlayerPiece();
+            checkLines(playerArena, 'player');
         }
 
         function playerMove(dir) {
             player.pos.x += dir;
-            if (collide(arena, player)) {
-                player.pos.x -= dir;
-            }
+            if (collide(playerArena, player)) player.pos.x -= dir;
         }
 
         function playerRotate(dir) {
             const posX = player.pos.x;
             let offset = 1;
             rotate(player.matrix, dir);
-            while (collide(arena, player)) {
+            while (collide(playerArena, player)) {
                 player.pos.x += offset;
                 offset = -(offset + (offset > 0 ? 1 : -1));
                 if (offset > player.matrix[0].length) {
@@ -361,7 +407,7 @@
             if (!player.canHold) return;
             if (!player.hold) {
                 player.hold = player.matrix;
-                playerReset();
+                resetPlayerPiece();
             } else {
                 const temp = player.matrix;
                 player.matrix = player.hold;
@@ -370,141 +416,205 @@
                 player.pos.x = (COLS / 2 | 0) - (player.matrix[0].length / 2 | 0);
             }
             player.canHold = false;
-            updateHoldUI();
+            drawMini(player.hold, document.getElementById('playerHold'));
         }
 
-        function updateHoldUI() {
-            const holdCanvas = document.getElementById('holdCanvas');
-            let typeIdx = 1;
-            drawMini(player.hold, holdCanvas, typeIdx);
+        function rotate(matrix, dir) {
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            if (dir > 0) matrix.forEach(row => row.reverse());
+            else matrix.reverse();
         }
 
-        function updateNextUI() {
-            const nextCanvas = document.getElementById('nextCanvas');
-            const nCtx = nextCanvas.getContext('2d');
-            nCtx.fillStyle = '#020617';
-            nCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
-            
-            nextQueue.forEach((matrix, index) => {
-                const mScale = 12;
-                matrix.forEach((row, y) => {
-                    row.forEach((value, x) => {
-                        if (value !== 0) {
-                            nCtx.fillStyle = '#38bdf8';
-                            nCtx.fillRect(x * mScale + 10, y * mScale + (index * 55) + 5, mScale, mScale);
-                        }
-                    });
+        function collide(arena, p) {
+            const m = p.matrix, o = p.pos;
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+                }
+            }
+            return false;
+        }
+
+        function merge(arena, p) {
+            p.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) arena[y + p.pos.y][x + p.pos.x] = value;
                 });
             });
         }
 
-        function playerReset() {
-            if (nextQueue.length === 0) {
-                const pieces = 'TJLOSZI';
-                for(let i=0; i<4; i++) {
-                    nextQueue.push(createPiece(pieces[(pieces.length * Math.random()) | 0]));
-                }
-            }
-            player.matrix = nextQueue.shift();
-            const pieces = 'TJLOSZI';
-            nextQueue.push(createPiece(pieces[(pieces.length * Math.random()) | 0]));
-
+        function resetPlayerPiece() {
+            if (playerNextQueue.length === 0) fillQueue(playerNextQueue);
+            player.matrix = playerNextQueue.shift();
+            fillQueue(playerNextQueue);
             player.pos.y = 0;
             player.pos.x = (COLS / 2 | 0) - (player.matrix[0].length / 2 | 0);
             player.canHold = true;
-            updateNextUI();
-
-            if (collide(arena, player)) {
-                arena.forEach(row => row.fill(0));
-                score = 0;
-                updateScore();
-            }
-
-            // ハエAIに思考＆ハードドロップを依頼
-            requestAIBrainMove();
-        }
-
-        async function requestAIBrainMove() {
-            document.getElementById('aiState').innerText = "🧠 ハエ脳演算中...";
-            try {
-                const response = await fetch(BACKEND_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ grid: arena })
-                });
-                const data = await response.json();
-                
-                document.getElementById('aiState').innerText = "⚡ ハエ急降下！";
-                
-                // AIの決定位置・回転を反映してハードドロップ実行
-                player.pos.x = data.bestX;
-                for(let r=0; r < data.bestRot; r++) {
-                    rotate(player.matrix, 1);
-                }
-                
-                setTimeout(() => {
-                    playerHardDrop(); // ハエの急降下！
-                }, 150);
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('aiState').innerText = "⚠️ 通信エラー";
+            drawQueue(playerNextQueue, document.getElementById('playerNext'));
+            if (collide(playerArena, player)) {
+                playerArena.forEach(r => r.fill(0));
             }
         }
 
-        function arenaSweep() {
-            let rowCount = 1;
+        function fillQueue(q) {
+            const pieces = 'TJLOSZI';
+            while(q.length < 3) q.push(createPiece(pieces[(pieces.length * Math.random()) | 0]));
+        }
+
+        function checkLines(arena, target) {
+            let cleared = 0;
             outer: for (let y = arena.length - 1; y > 0; --y) {
                 for (let x = 0; x < arena[y].length; ++x) {
-                    if (arena[y][x] === 0) {
-                        continue outer;
-                    }
+                    if (arena[y][x] === 0) continue outer;
                 }
-                const row = arena.splice(y, 1)[0].fill(0);
-                arena.unshift(row);
+                arena.splice(y, 1);
+                arena.unshift(new Array(COLS).fill(0));
                 ++y;
-                score += rowCount * 100;
-                rowCount *= 2;
+                cleared++;
             }
-            updateScore();
+            if (cleared > 0) {
+                if (target === 'player') {
+                    player.lines += cleared;
+                    document.getElementById('playerLines').innerText = `Lines: ${player.lines}`;
+                    // Gachiモードでの妨害送信
+                    if (gameMode === 'gachi' && cleared >= 2) sendGarbageToAI(cleared - 1);
+                } else {
+                    ai.lines++;
+                    document.getElementById('aiLines').innerText = `Lines: ${ai.lines}`;
+                    if (gameMode === 'gachi') sendGarbageToPlayer(1);
+                }
+            }
         }
 
-        function updateScore() {
-            document.getElementById('score').innerText = score;
+        function sendGarbageToAI(lines) {
+            for(let i=0; i<lines; i++) {
+                aiArena.shift();
+                const garbageRow = new Array(COLS).fill(8);
+                garbageRow[Math.floor(Math.random() * COLS)] = 0; // 隙間を作る
+                aiArena.push(garbageRow);
+            }
         }
 
+        function sendGarbageToPlayer(lines) {
+            for(let i=0; i<lines; i++) {
+                playerArena.shift();
+                const garbageRow = new Array(COLS).fill(8);
+                garbageRow[Math.floor(Math.random() * COLS)] = 0;
+                playerArena.push(garbageRow);
+            }
+        }
+
+        // --- ハエAI思考ループ ---
+        async function aiStep() {
+            if (!battleActive) return;
+            try {
+                document.getElementById('aiState').innerText = "🧠 コネクトーム演算中...";
+                const res = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ grid: aiArena })
+                });
+                const data = await res.json();
+                
+                document.getElementById('aiState').innerText = "⚡ ハエ急降下！";
+                ai.pos.x = data.bestX;
+                for(let r=0; r < data.bestRot; r++) rotate(ai.matrix, 1);
+                
+                // AIハードドロップ実行
+                while (!collide(aiArena, ai)) ai.pos.y++;
+                ai.pos.y--;
+                merge(aiArena, ai);
+                resetAIPiece();
+                checkLines(aiArena, 'ai');
+            } catch(e) {
+                document.getElementById('aiState').innerText = "⚠️ 通信待機中";
+                // フォールバック自動落下
+                ai.pos.y++;
+                if (collide(aiArena, ai)) {
+                    ai.pos.y--;
+                    merge(aiArena, ai);
+                    resetAIPiece();
+                }
+            }
+            if (battleActive) setTimeout(aiStep, 1200);
+        }
+
+        function resetAIPiece() {
+            if (aiNextQueue.length === 0) fillQueue(aiNextQueue);
+            ai.matrix = aiNextQueue.shift();
+            fillQueue(aiNextQueue);
+            ai.pos.y = 0;
+            ai.pos.x = (COLS / 2 | 0) - (ai.matrix[0].length / 2 | 0);
+            drawQueue(aiNextQueue, document.getElementById('aiNext'));
+            if (collide(aiArena, ai)) aiArena.forEach(r => r.fill(0));
+        }
+
+        // キーボード入力
+        document.addEventListener('keydown', e => {
+            if (!battleActive) return;
+            if (e.key === 'ArrowLeft') playerMove(-1);
+            else if (e.key === 'ArrowRight') playerMove(1);
+            else if (e.key === 'ArrowDown') playerDrop();
+            else if (e.key === 'ArrowUp') playerRotate(1);
+            else if (e.key === ' ') { e.preventDefault(); playerHardDrop(); }
+            else if (e.key === 'c' || e.key === 'C') playerHold();
+        });
+
+        // ゲームループ
+        let dropCounter = 0;
+        let lastTime = 0;
         function update(time = 0) {
-            const deltaTime = time - lastTime;
+            if (!battleActive) return;
+            const dt = time - lastTime;
             lastTime = time;
-            dropCounter += deltaTime;
-            if (dropCounter > dropInterval) {
+            dropCounter += dt;
+            if (dropCounter > 800) {
                 playerDrop();
+                dropCounter = 0;
             }
             draw();
             requestAnimationFrame(update);
         }
 
-        document.addEventListener('keydown', event => {
-            if (event.key === 'ArrowLeft') {
-                playerMove(-1);
-            } else if (event.key === 'ArrowRight') {
-                playerMove(1);
-            } else if (event.key === 'ArrowDown') {
-                playerDrop();
-            } else if (event.key === 'ArrowUp') {
-                playerRotate(1);
-            } else if (event.key === ' ') { // スペースキーでハードドロップ
-                playerHardDrop();
-            } else if (event.key === 'c' || event.key === 'C') {
-                playerHold();
-            }
-        });
+        function startBattle() {
+            playerArena.forEach(r => r.fill(0));
+            aiArena.forEach(r => r.fill(0));
+            player.lines = 0;
+            ai.lines = 0;
+            document.getElementById('playerLines').innerText = "Lines: 0";
+            document.getElementById('aiLines').innerText = "Lines: 0";
+            
+            playerNextQueue = [];
+            aiNextQueue = [];
+            fillQueue(playerNextQueue);
+            fillQueue(aiNextQueue);
+            resetPlayerPiece();
+            resetAIPiece();
 
-        function startGame() {
-            arena.forEach(row => row.fill(0));
-            score = 0;
-            updateScore();
-            playerReset();
+            battleActive = true;
+            lastTime = performance.now();
+            update();
+            aiStep();
+
+            if (gameMode === 'quick') {
+                gameTimer = 90;
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    gameTimer--;
+                    document.getElementById('timerDisplay').innerText = `Time: ${gameTimer}s`;
+                    if (gameTimer <= 0) {
+                        clearInterval(timerInterval);
+                        battleActive = false;
+                        alert("タイムアップ！");
+                    }
+                }, 1000);
+            } else {
+                document.getElementById('timerDisplay').innerText = `Time: ∞`;
+            }
         }
     </script>
 </body>
