@@ -3,45 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Male CNS Connectome Tetris</title>
+    <title>Male CNS vs Human - Tetris Battle</title>
     <style>
-        body { background: #020617; color: #38bdf8; font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
-        h1 { font-size: 0.85rem; text-align: center; margin: 4px 0; }
-        #status { font-size: 0.7rem; color: #f43f5e; font-weight: bold; margin-bottom: 4px; text-align: center; }
-        .container { display: flex; gap: 8px; margin-bottom: 6px; width: 100%; max-width: 380px; justify-content: center; }
-        .board-wrapper { border: 2px solid #38bdf8; padding: 4px; border-radius: 8px; text-align: center; background: rgba(56,189,248,0.05); flex: 1; }
-        canvas { background: #000; border: 1px solid #1e293b; display: block; width: 100%; max-width: 130px; height: auto; margin: 0 auto; }
-        .controls { display: grid; grid-template-columns: repeat(3, 65px); gap: 6px; margin-top: 4px; }
-        button.ctrl { background: #0f172a; color: #38bdf8; border: 2px solid #38bdf8; padding: 14px; font-weight: bold; border-radius: 6px; font-size: 1.1rem; cursor: pointer; }
-        .start-btn { grid-column: span 3; background: #f43f5e !important; border-color: #f43f5e !important; color: #fff !important; font-size: 0.85rem !important; padding: 12px !important; }
-        .score { font-size: 0.65rem; margin-top: 2px; }
+        * { box-sizing: border-box; }
+        body { background: #0b0f19; color: #fff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 6px; touch-action: manipulation; -webkit-user-select: none; user-select: none; overflow-x: hidden; }
+        h1 { font-size: 0.75rem; text-align: center; margin: 2px 0; color: #38bdf8; text-shadow: 0 0 8px rgba(56,189,248,0.5); }
+        
+        /* モード選択画面 */
+        #menuScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; width: 100%; gap: 12px; }
+        .mode-btn { background: linear-gradient(135deg, #1e293b, #0f172a); color: #38bdf8; border: 2px solid #38bdf8; padding: 14px 24px; font-weight: bold; border-radius: 12px; font-size: 0.95rem; cursor: pointer; width: 280px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: 0.2s; }
+        .mode-btn:active { transform: scale(0.96); }
+        .mode-btn.gachi { border-color: #f43f5e; color: #f43f5e; }
+
+        /* ゲーム画面レイアウト */
+        #gameScreen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 420px; }
+        .top-info { display: flex; justify-content: space-between; width: 100%; padding: 0 10px; font-size: 0.75rem; margin-bottom: 4px; font-weight: bold; }
+        #timerDisplay { color: #facc15; }
+
+        .battle-field { display: flex; gap: 6px; justify-content: center; align-items: flex-start; }
+        
+        .player-panel { display: flex; flex-direction: column; align-items: center; }
+        
+        .sub-box-container { display: flex; gap: 4px; margin-bottom: 3px; width: 100%; justify-content: space-between; }
+        .mini-box { background: #020617; border: 1.5px solid #38bdf8; border-radius: 4px; padding: 2px; text-align: center; width: 45px; height: 42px; }
+        .ai-panel .mini-box { border-color: #f43f5e; }
+        .box-label { font-size: 0.5rem; color: #94a3b8; margin-bottom: 1px; }
+        
+        .canvas-container { border: 3px solid #38bdf8; border-radius: 6px; background: rgba(0,0,0,0.8); padding: 1px; box-shadow: 0 0 12px rgba(56,189,248,0.3); }
+        .ai-panel .canvas-container { border-color: #f43f5e; box-shadow: 0 0 12px rgba(244,63,94,0.3); }
+        
+        canvas { display: block; width: 90px; height: 180px; background: #000; }
+        mini-canvas { display: block; width: 36px; height: 36px; margin: 0 auto; }
+
+        .score-board { font-size: 0.65rem; margin-top: 2px; color: #e2e8f0; }
+
+        /* 操作パネル */
+        .controls { display: grid; grid-template-columns: repeat(3, 70px); gap: 6px; margin-top: 8px; }
+        button.ctrl { background: #0f172a; color: #38bdf8; border: 2px solid #38bdf8; padding: 12px; font-weight: bold; border-radius: 8px; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        button.ctrl:active { background: #1e293b; }
+        .ai-ctrl { border-color: #f43f5e !important; color: #f43f5e !important; }
+
+        /* リザルト画面 */
+        #resultScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2,6,23,0.95); flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 14px; }
+        #resultTitle { font-size: 1.8rem; font-weight: bold; text-shadow: 0 0 15px currentColor; }
+        .result-stats { font-size: 0.9rem; text-align: center; line-height: 1.6; background: #0f172a; border: 2px solid #38bdf8; padding: 15px 25px; border-radius: 12px; }
+        .restart-btn { background: #38bdf8; color: #020617; border: none; padding: 12px 28px; font-weight: bold; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <h1>🧠 Male CNS v1.0 vs HUMAN</h1>
-    <div id="status">READY: TAP START BATTLE</div>
-    
-    <div class="container">
-        <div class="board-wrapper">
-            <div style="font-size:0.7rem; font-weight:bold;">YOU</div>
-            <canvas id="playerCanvas" width="100" height="200"></canvas>
-            <div class="score">Score: <span id="playerScore">0</span></div>
+
+    <!-- モード選択画面 -->
+    <div id="menuScreen">
+        <h1>🧠 MALE CNS v1.0 TETRIS BATTLE</h1>
+        <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">モードを選んでバトル開始！</div>
+        <button class="mode-btn" onclick="startGame('normal')">⚔️ 通常モード<br><span style="font-size:0.6rem; color:#94a3b8;">時間無制限 / 決着までガチ勝負</span></button>
+        <button class="mode-btn" onclick="startGame('quick')">⚡ クイックマッチ<br><span style="font-size:0.6rem; color:#94a3b8;">制限時間1分30秒 / スコア勝負</span></button>
+        <button class="mode-btn gachi" onclick="startGame('gachi')">🔥 ガチマッチ<br><span style="font-size:0.6rem; color:#94a3b8;">時間無制限 / 妨害ミノ発生あり</span></button>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="gameScreen">
+        <h1 id="modeTitle">MALE CNS v1.0 BATTLE</h1>
+        <div class="top-info">
+            <span id="timerDisplay">TIME: --:--</span>
+            <span id="statusDisplay" style="color:#38bdf8;">BATTLE ACTIVE</span>
         </div>
-        <div class="board-wrapper" style="border-color:#f43f5e">
-            <div style="font-size:0.7rem; font-weight:bold; color:#f43f5e;">MALE CNS AI</div>
-            <canvas id="flyCanvas" width="100" height="200"></canvas>
-            <div class="score">Score: <span id="flyScore">0</span></div>
+
+        <div class="battle-field">
+            <!-- プレイヤー側 -->
+            <div class="player-panel">
+                <div class="sub-box-container">
+                    <div class="mini-box">
+                        <div class="box-label">HOLD</div>
+                        <canvas id="holdCanvas" width="36" height="36"></canvas>
+                    </div>
+                    <div class="mini-box" style="border-color:#facc15;">
+                        <div class="box-label" style="color:#facc15;">NEXT</div>
+                        <canvas id="nextCanvas" width="36" height="36"></canvas>
+                    </div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="playerCanvas" width="90" height="180"></canvas>
+                </div>
+                <div class="score-board">SCORE: <span id="playerScore">0</span></div>
+            </div>
+
+            <!-- ハエAI側 -->
+            <div class="player-panel ai-panel">
+                <div class="sub-box-container">
+                    <div class="mini-box" style="border-color:#f43f5e;">
+                        <div class="box-label">HOLD</div>
+                        <canvas id="aiHoldCanvas" width="36" height="36"></canvas>
+                    </div>
+                    <div class="mini-box" style="border-color:#facc15;">
+                        <div class="box-label" style="color:#facc15;">NEXT</div>
+                        <canvas id="aiNextCanvas" width="36" height="36"></canvas>
+                    </div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="flyCanvas" width="90" height="180"></canvas>
+                </div>
+                <div class="score-board">SCORE: <span id="aiScore">0</span></div>
+            </div>
+        </div>
+
+        <!-- 操作ボタン -->
+        <div class="controls">
+            <button class="ctrl" id="btnHold">📦 HOLD</button>
+            <button class="ctrl" id="btnRot">🔄 回転</button>
+            <button class="ctrl" id="btnHard">⚡ 急降下</button>
+            <button class="ctrl" id="btnLeft">◀ 左</button>
+            <button class="ctrl" id="btnDown">▼ 下</button>
+            <button class="ctrl" id="btnRight">▶ 右</button>
         </div>
     </div>
 
-    <div class="controls">
-        <div></div>
-        <button class="ctrl" id="btnRot">🔄</button>
-        <div></div>
-        <button class="ctrl" id="btnLeft">◀</button>
-        <button class="ctrl" id="btnDown">▼</button>
-        <button class="ctrl" id="btnRight">▶</button>
-        <button class="ctrl start-btn" id="btnStart">START BATTLE</button>
+    <!-- リザルト画面 -->
+    <div id="resultScreen">
+        <div id="resultTitle">WINNER</div>
+        <div class="result-stats" id="resultStats">スコア集計中...</div>
+        <button class="restart-btn" onclick="location.reload()">タイトルに戻る</button>
     </div>
 
 <script>
@@ -55,35 +136,42 @@ const SHAPES = [
     [[0,1,1],[1,1,0]],    // S
     [[1,1,0],[0,1,1]]     // Z
 ];
+const COLORS = ['#000', '#38bdf8', '#facc15', '#c084fc', '#fb923c', '#60a5fa', '#4ade80', '#f43f5e', '#64748b'];
 
 const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev/predict";
 
 class TetrisGame {
-    constructor(canvasId, scoreId, isAi = false) {
+    constructor(canvasId, scoreId, holdCanvasId, nextCanvasId, isAi = false) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.scoreEl = document.getElementById(scoreId);
+        this.holdCtx = document.getElementById(holdCanvasId).getContext('2d');
+        this.nextCtx = document.getElementById(nextCanvasId).getContext('2d');
         this.isAi = isAi;
         this.init();
     }
     init() {
         this.grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
         this.score = 0;
+        this.holdPiece = null;
+        this.canHold = true;
+        this.nextPieceType = Math.floor(Math.random() * SHAPES.length);
         this.spawnPiece();
         this.draw();
     }
     spawnPiece() {
-        this.pieceType = Math.floor(Math.random() * SHAPES.length);
+        this.pieceType = this.nextPieceType;
+        this.nextPieceType = Math.floor(Math.random() * SHAPES.length);
         this.shape = SHAPES[this.pieceType];
         this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
         this.y = 0;
+        this.canHold = true;
         
         if (this.checkCollision(0, 0, this.shape)) {
-            this.init();
+            endGame(this.isAi ? "PLAYER" : "MALE CNS AI");
             return;
         }
 
-        // AIの場合：サーバーに問い合わせつつ、失敗時はローカルの神経ネットワークロジックで即座に動かす
         if (this.isAi) {
             fetch(BACKEND_URL, {
                 method: 'POST',
@@ -99,12 +187,27 @@ class TetrisGame {
                 this.x = Math.max(0, Math.min(COLS - this.shape[0].length, data.bestX));
                 this.draw();
             })
-            .catch(err => {
-                // サーバー通信エラー時はローカルで即座に安全な位置を決める
+            .catch(() => {
                 this.x = Math.floor(Math.random() * (COLS - this.shape[0].length + 1));
                 this.draw();
             });
         }
+        this.draw();
+    }
+    hold() {
+        if (!this.canHold) return;
+        if (this.holdPiece === null) {
+            this.holdPiece = this.pieceType;
+            this.spawnPiece();
+        } else {
+            let temp = this.pieceType;
+            this.pieceType = this.holdPiece;
+            this.holdPiece = temp;
+            this.shape = SHAPES[this.pieceType];
+            this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
+            this.y = 0;
+        }
+        this.canHold = false;
         this.draw();
     }
     checkCollision(offsetX, offsetY, newShape) {
@@ -144,9 +247,22 @@ class TetrisGame {
             this.grid.unshift(Array(COLS).fill(0));
         }
         if (lines > 0) {
-            this.score += lines * 100;
+            this.score += lines * 100 * lines;
             this.scoreEl.innerText = this.score;
+
+            // ガチマッチモードの妨害ミノ機能（2ライン以上消したら相手に灰色ブロックを送りつける）
+            if (currentMode === 'gachi' && lines >= 2) {
+                let target = this.isAi ? player : flyAi;
+                target.sendGarbage();
+            }
         }
+    }
+    sendGarbage() {
+        this.grid.shift();
+        let garbageRow = Array(COLS).fill(8); // 8番の色（灰色）
+        garbageRow[Math.floor(Math.random() * COLS)] = 0; // 1箇所穴を開ける
+        this.grid.push(garbageRow);
+        this.draw();
     }
     move(dir) {
         if (!this.checkCollision(dir, 0, this.shape)) {
@@ -162,12 +278,36 @@ class TetrisGame {
         }
         this.draw();
     }
+    hardDrop() {
+        while (!this.checkCollision(0, 1, this.shape)) {
+            this.y++;
+        }
+        this.merge();
+    }
     rotate() {
         let rotated = this.shape[0].map((_, index) => this.shape.map(row => row[index]).reverse());
         if (!this.checkCollision(0, 0, rotated)) {
             this.shape = rotated;
             this.draw();
         }
+    }
+    drawMini(ctx, pieceType) {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 36, 36);
+        if (pieceType === null || pieceType === undefined) return;
+        let shape = SHAPES[pieceType];
+        let color = COLORS[pieceType + 1];
+        let size = 7;
+        let offsetX = (36 - shape[0].length * size) / 2;
+        let offsetY = (36 - shape.length * size) / 2;
+        shape.forEach((row, r) => {
+            row.forEach((val, c) => {
+                if (val) {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(offsetX + c * size, offsetY + r * size, size - 1, size - 1);
+                }
+            });
+        });
     }
     draw() {
         this.ctx.fillStyle = '#000';
@@ -176,8 +316,8 @@ class TetrisGame {
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 if (this.grid[r][c]) {
-                    this.ctx.fillStyle = this.isAi ? '#f43f5e' : '#38bdf8';
-                    this.ctx.fillRect(c * 10, r * 10, 9, 9);
+                    this.ctx.fillStyle = COLORS[this.grid[r][c]];
+                    this.ctx.fillRect(c * 9, r * 9, 8, 8);
                 }
             }
         }
@@ -185,46 +325,100 @@ class TetrisGame {
             this.shape.forEach((row, r) => {
                 row.forEach((val, c) => {
                     if (val && this.y + r >= 0) {
-                        this.ctx.fillStyle = this.isAi ? '#fda4af' : '#7dd3fc';
-                        this.ctx.fillRect((this.x + c) * 10, (this.y + r) * 10, 9, 9);
+                        this.ctx.fillStyle = COLORS[this.pieceType + 1];
+                        this.ctx.fillRect((this.x + c) * 9, (this.y + r) * 9, 8, 8);
                     }
                 });
             });
         }
+        this.drawMini(this.holdCtx, this.holdPiece);
+        this.drawMini(this.nextCtx, this.nextPieceType);
     }
 }
 
 let player = null;
 let flyAi = null;
 let gameInterval = null;
+let timerInterval = null;
+let currentMode = 'normal';
+let timeLeft = 90;
+let lastDownTime = 0;
 
-function startBattle() {
-    document.getElementById('status').innerText = "🧠 MALE CNS v1.0: BATTLE ACTIVE";
-    player = new TetrisGame('playerCanvas', 'playerScore', false);
-    flyAi = new TetrisGame('flyCanvas', 'flyScore', true);
+function startGame(mode) {
+    currentMode = mode;
+    document.getElementById('menuScreen').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'flex';
     
+    player = new TetrisGame('playerCanvas', 'playerScore', 'holdCanvas', 'nextCanvas', false);
+    flyAi = new TetrisGame('flyCanvas', 'aiScore', 'aiHoldCanvas', 'aiNextCanvas', true);
+
+    if (mode === 'quick') {
+        timeLeft = 90;
+        document.getElementById('timerDisplay').innerText = "TIME: 01:30";
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            let m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+            let s = String(timeLeft % 60).padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `TIME: ${m}:${s}`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkTimeUpWinner();
+            }
+        }, 1000);
+    } else {
+        document.getElementById('timerDisplay').innerText = mode === 'gachi' ? "🔥 GACHI MODE" : "♾️ NORMAL MODE";
+    }
+
     if (gameInterval) clearInterval(gameInterval);
-    
     gameInterval = setInterval(() => {
         if (player) player.drop();
         if (flyAi) flyAi.drop();
     }, 500);
 }
 
-document.getElementById('btnStart').addEventListener('click', startBattle);
-document.getElementById('btnStart').addEventListener('touchstart', (e) => { e.preventDefault(); startBattle(); });
+function endGame(winnerName) {
+    if (gameInterval) clearInterval(gameInterval);
+    if (timerInterval) clearInterval(timerInterval);
 
-document.getElementById('btnLeft').addEventListener('click', () => { if(player) player.move(-1); });
-document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); if(player) player.move(-1); });
+    document.getElementById('resultScreen').style.display = 'flex';
+    document.getElementById('resultTitle').innerText = winnerName === "PLAYER" ? "🎉 YOU WIN!" : "💀 YOU LOSE...";
+    document.getElementById('resultTitle').style.color = winnerName === "PLAYER" ? "#38bdf8" : "#f43f5e";
+    document.getElementById('resultStats').innerHTML = `
+        👤 プレイヤー スコア: <b>${player ? player.score : 0}</b><br>
+        🧠 ハエ脳AI スコア: <b>${flyAi ? flyAi.score : 0}</b>
+    `;
+}
 
-document.getElementById('btnRight').addEventListener('click', () => { if(player) player.move(1); });
-document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); if(player) player.move(1); });
+function checkTimeUpWinner() {
+    let pScore = player ? player.score : 0;
+    let aScore = flyAi ? flyAi.score : 0;
+    if (pScore > aScore) {
+        endGame("PLAYER");
+    } else if (aScore > pScore) {
+        endGame("MALE CNS AI");
+    } else {
+        endGame("DRAW");
+    }
+}
 
-document.getElementById('btnDown').addEventListener('click', () => { if(player) player.drop(); });
-document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); if(player) player.drop(); });
-
+// ボタンイベント紐付け
+document.getElementById('btnHold').addEventListener('click', () => { if(player) player.hold(); });
 document.getElementById('btnRot').addEventListener('click', () => { if(player) player.rotate(); });
-document.getElementById('btnRot').addEventListener('touchstart', (e) => { e.preventDefault(); if(player) player.rotate(); });
+document.getElementById('btnHard').addEventListener('click', () => { if(player) player.hardDrop(); });
+document.getElementById('btnLeft').addEventListener('click', () => { if(player) player.move(-1); });
+document.getElementById('btnRight').addEventListener('click', () => { if(player) player.move(1); });
+
+// 下ボタン2回押し（ダブルタップ）判定
+document.getElementById('btnDown').addEventListener('click', () => {
+    if(!player) return;
+    let now = Date.now();
+    if (now - lastDownTime < 300) {
+        player.hardDrop(); // 0.3秒以内に2回押されたらハードドロップ（真下に一気に落ちる）
+    } else {
+        player.drop();
+    }
+    lastDownTime = now;
+});
 </script>
 </body>
 </html>
