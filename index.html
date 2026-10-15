@@ -44,7 +44,7 @@
         }
         #start-screen p {
             color: #aaa;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             font-size: 0.9rem;
             text-align: center;
         }
@@ -52,17 +52,31 @@
             background: linear-gradient(135deg, #6200ee, #bb86fc);
             color: white;
             border: none;
-            padding: 14px 20px;
+            padding: 12px 20px;
             font-size: 1rem;
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
-            margin: 8px 0;
+            margin: 6px 0;
             width: 100%;
             max-width: 280px;
             box-shadow: 0 4px 15px rgba(98, 0, 238, 0.4);
         }
         .mode-btn:active { transform: scale(0.95); }
+
+        /* PC操作説明ボックス */
+        .controls-guide {
+            background: #161622;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-top: 15px;
+            max-width: 320px;
+            font-size: 0.8rem;
+            color: #ccc;
+            line-height: 1.4;
+        }
+        .controls-guide b { color: #03dac6; }
 
         /* ゲームメインレイアウト */
         #game-container {
@@ -158,7 +172,7 @@
             font-weight: bold;
         }
 
-        /* スマホ用操作ボタン（PCでは非表示） */
+        /* スマホ用操作ボタン */
         .controls {
             display: flex;
             flex-direction: column;
@@ -222,19 +236,28 @@
             .panel-title { font-size: 0.95rem; }
             .score-board { font-size: 0.95rem; }
             .mini-container { font-size: 0.75rem; }
-            .controls { display: none; } /* PCではボタンを隠しキーボード操作に集中 */
+            .controls { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- スタート画面 -->
+    <!-- スタート画面（PC操作説明付き） -->
     <div id="start-screen">
         <h1>FlyTris Battle Arena</h1>
         <p>Human vs. MaleCNS Connectome AI</p>
         <button class="mode-btn" onclick="startGame('normal')">通常対戦 (時間無制限)</button>
         <button class="mode-btn" onclick="startGame('quick')">クイック対戦 (制限1分半)</button>
         <button class="mode-btn" onclick="startGame('gachi')">ガチ対戦 (妨害ミノ発生)</button>
+
+        <div class="controls-guide">
+            <b>💻 PC操作方法</b><br>
+            ・<b>← / → </b> : 左右移動<br>
+            ・<b>↑ </b> : 回転<br>
+            ・<b>↓ </b> : ソフトドロップ<br>
+            ・<b>スペース </b> : 急降下<br>
+            ・<b>C </b> : ホールド
+        </div>
     </div>
 
     <!-- ゲームプレイ画面 -->
@@ -298,8 +321,8 @@
     </div>
 
 <script>
-    // ⚠️ Python側（Colab等）の ngrok 公開リンクに必ず書き換えてください
-    const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+    // ⚠️ Python側（Colab等）の ngrok 公開リンクに必ず書き換えてください（末尾に /predict を忘れない）
+    const BACKEND_URL = "https://YOUR_NGROK_URL_HERE/predict";
 
     const ROWS = 20;
     const COLS = 10;
@@ -600,12 +623,12 @@
         if (player) player.quickDrop();
     }
 
-    // 🔴 PCでのキーボード操作が確実に効くようにグローバルリスナーを修正
+    // キーボード操作の完全バインド
     window.addEventListener('keydown', e => {
         if (gameOver || document.getElementById('start-screen').style.display !== 'none' || !player) return;
         
         if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', ' '].includes(e.key)) {
-            e.preventDefault(); // 画面スクロールを防止
+            e.preventDefault();
         }
 
         if (e.key === 'ArrowLeft') playerMove('left');
@@ -616,7 +639,7 @@
         else if (e.key === 'c' || e.key === 'C') player.hold();
     });
 
-    // 🔴 ハエAIの思考ループ（エラー時も絶対に止まらないよう堅牢化）
+    // 🔴 ハエAIが確実に動くよう通信処理を再構築
     async function aiLoop() {
         if (gameOver || !ai) return;
         try {
@@ -628,13 +651,20 @@
                 },
                 body: JSON.stringify({ grid: ai.grid, reward: ai.aiReward })
             });
+            
+            if (!response.ok) {
+                console.error("AIサーバーエラー status:", response.status);
+                if (!gameOver) setTimeout(aiLoop, 2000);
+                return;
+            }
+
             const text = await response.text();
             let data;
             try {
                 data = JSON.parse(text);
             } catch (e) {
-                console.error("⚠️ AIレスポンスがJSONではありません（ngrok警告ページの可能性があります）。再試行します...");
-                if (!gameOver) setTimeout(aiLoop, 1500);
+                console.error("⚠️ ngrokの警告ページを検知しました。リクエストを再試行します...");
+                if (!gameOver) setTimeout(aiLoop, 2000);
                 return;
             }
 
@@ -654,7 +684,6 @@
             console.error("❌ AI通信エラー:", err);
         }
         
-        // 次の思考へ確実に繋げる
         if (!gameOver) {
             setTimeout(aiLoop, 800);
         }
