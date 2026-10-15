@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Human vs. MaleCNS FlyTris Ultimate Battle</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             background-color: #0b0b14;
             color: #e0e0e0;
@@ -23,7 +21,6 @@
             touch-action: manipulation;
         }
 
-        /* スタート画面モーダル */
         #start-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -36,194 +33,80 @@
             padding: 20px;
         }
         #start-screen h1 {
-            color: #bb86fc;
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-            text-align: center;
+            color: #bb86fc; font-size: 1.8rem; margin-bottom: 5px; text-align: center;
             text-shadow: 0 0 15px rgba(187,134,252,0.5);
         }
-        #start-screen p {
-            color: #aaa;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            text-align: center;
-        }
+        #start-screen p { color: #aaa; margin-bottom: 15px; font-size: 0.9rem; text-align: center; }
         .mode-btn {
             background: linear-gradient(135deg, #6200ee, #bb86fc);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            margin: 6px 0;
-            width: 100%;
-            max-width: 280px;
-            box-shadow: 0 4px 15px rgba(98, 0, 238, 0.4);
+            color: white; border: none; padding: 12px 20px; font-size: 1rem;
+            font-weight: bold; border-radius: 10px; cursor: pointer; margin: 6px 0;
+            width: 100%; max-width: 280px; box-shadow: 0 4px 15px rgba(98, 0, 238, 0.4);
         }
         .mode-btn:active { transform: scale(0.95); }
 
-        /* PC操作説明ボックス */
         .controls-guide {
-            background: #161622;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin-top: 15px;
-            max-width: 320px;
-            font-size: 0.8rem;
-            color: #ccc;
-            line-height: 1.4;
+            background: #161622; border: 1px solid #333; border-radius: 8px;
+            padding: 10px 15px; margin-top: 15px; max-width: 320px; font-size: 0.8rem; color: #ccc; line-height: 1.4;
         }
         .controls-guide b { color: #03dac6; }
 
-        /* ゲームメインレイアウト */
         #game-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 100%;
+            display: none; flex-direction: column; align-items: center; width: 100%; max-width: 100%;
         }
         .top-bar {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 480px;
-            padding: 0 5px;
-            margin-bottom: 5px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #03dac6;
+            display: flex; justify-content: space-between; width: 100%; max-width: 480px;
+            padding: 0 5px; margin-bottom: 5px; font-size: 0.85rem; font-weight: bold; color: #03dac6;
         }
 
         .battle-arena {
-            display: flex;
-            flex-direction: row; 
-            gap: 10px;
-            background: #161622;
-            padding: 8px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.7);
-            border: 2px solid #2a2a3d;
-            width: 100%;
-            max-width: 480px;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: row; gap: 10px; background: #161622;
+            padding: 8px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+            border: 2px solid #2a2a3d; width: 100%; max-width: 480px; align-items: center; justify-content: center;
         }
 
         .player-panel {
-            display: flex;
-            gap: 4px;
-            align-items: flex-start;
-            background: #12121a;
-            padding: 6px;
-            border-radius: 8px;
-            justify-content: center;
+            display: flex; gap: 4px; align-items: flex-start; background: #12121a;
+            padding: 6px; border-radius: 8px; justify-content: center;
         }
-        .side-box {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .side-box { display: flex; flex-direction: column; gap: 4px; }
         .mini-container {
-            background: #0f0f17;
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 2px;
-            text-align: center;
-            font-size: 0.55rem;
-            color: #888;
+            background: #0f0f17; border: 1px solid #333; border-radius: 4px;
+            padding: 2px; text-align: center; font-size: 0.55rem; color: #888;
         }
         
         canvas.mini-canvas {
-            background: #000;
-            display: block;
-            margin: 1px auto 0 auto;
-            width: 36px;
-            height: 36px;
+            background: #000; display: block; margin: 1px auto 0 auto; width: 36px; height: 36px;
         }
-        .next-canvas {
-            width: 36px !important;
-            height: 108px !important;
-        }
-        .main-board {
-            border: 2px solid #444;
-            background-color: #000;
-            display: block;
-            width: 120px;
-            height: 240px;
-        }
+        .next-canvas { width: 36px !important; height: 108px !important; }
+        .main-board { border: 2px solid #444; background-color: #000; display: block; width: 120px; height: 240px; }
 
-        .panel-title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.75rem;
-            margin-bottom: 2px;
-        }
+        .panel-title { text-align: center; font-weight: bold; font-size: 0.75rem; margin-bottom: 2px; }
         .player-title { color: #03dac6; }
         .ai-title { color: #ff7597; }
+        .score-board { margin-top: 3px; font-size: 0.75rem; text-align: center; font-weight: bold; }
 
-        .score-board {
-            margin-top: 3px;
-            font-size: 0.75rem;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        /* スマホ用操作ボタン */
         .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            margin-top: 8px;
-            width: 100%;
-            max-width: 480px;
+            display: flex; flex-direction: column; gap: 5px; margin-top: 8px; width: 100%; max-width: 480px;
         }
-        .control-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 5px;
-        }
+        .control-row { display: flex; justify-content: space-between; gap: 5px; }
         .ctrl-btn {
-            flex: 1;
-            background: #22223b;
-            color: #bb86fc;
-            border: 2px solid #bb86fc;
-            padding: 10px 0;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            flex: 1; background: #22223b; color: #bb86fc; border: 2px solid #bb86fc;
+            padding: 10px 0; font-size: 0.85rem; font-weight: bold; border-radius: 6px;
+            cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
         }
         .ctrl-btn:active { background: #bb86fc; color: #121212; }
 
-        /* リザルト画面 */
         #result-modal {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: #1a1a26;
-            border: 2px solid #bb86fc;
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 0 40px rgba(187, 134, 252, 0.5);
-            z-index: 1000;
-            width: 85%;
-            max-width: 320px;
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #1a1a26; border: 2px solid #bb86fc; padding: 25px; border-radius: 15px;
+            text-align: center; box-shadow: 0 0 40px rgba(187, 134, 252, 0.5); z-index: 1000; width: 85%; max-width: 320px;
         }
         #result-modal h2 { margin-top: 0; color: #03dac6; font-size: 1.4rem; }
         #result-modal p { font-size: 0.95rem; line-height: 1.4; color: #ddd; }
         #result-modal button {
-            background: #bb86fc; color: #121212;
-            border: none; padding: 12px 20px; font-size: 1rem;
-            font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px;
-            width: 100%;
+            background: #bb86fc; color: #121212; border: none; padding: 12px 20px;
+            font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px; width: 100%;
         }
 
         @media (min-width: 768px) {
@@ -242,7 +125,6 @@
 </head>
 <body>
 
-    <!-- スタート画面（PC操作説明付き） -->
     <div id="start-screen">
         <h1>FlyTris Battle Arena</h1>
         <p>Human vs. MaleCNS Connectome AI</p>
@@ -252,15 +134,12 @@
 
         <div class="controls-guide">
             <b>💻 PC操作方法</b><br>
-            ・<b>← / → </b> : 左右移動<br>
-            ・<b>↑ </b> : 回転<br>
-            ・<b>↓ </b> : ソフトドロップ<br>
-            ・<b>スペース </b> : 急降下<br>
+            ・<b>← / → </b> : 左右移動 | <b>↑ </b> : 回転<br>
+            ・<b>↓ </b> : ソフト | <b>スペース </b> : 急降下<br>
             ・<b>C </b> : ホールド
         </div>
     </div>
 
-    <!-- ゲームプレイ画面 -->
     <div id="game-container">
         <div class="top-bar">
             <span id="mode-display">Mode: Normal</span>
@@ -268,7 +147,6 @@
         </div>
 
         <div class="battle-arena">
-            <!-- プレイヤー側パネル (左) -->
             <div class="player-panel">
                 <div class="side-box">
                     <div class="mini-container">HOLD<canvas id="playerHoldCanvas" width="40" height="40" class="mini-canvas"></canvas></div>
@@ -283,7 +161,6 @@
                 </div>
             </div>
 
-            <!-- ハエAI側パネル (右) -->
             <div class="player-panel">
                 <div class="side-box">
                     <div class="mini-container">HOLD<canvas id="aiHoldCanvas" width="40" height="40" class="mini-canvas"></canvas></div>
@@ -299,7 +176,6 @@
             </div>
         </div>
 
-        <!-- スマホ用操作ボタン -->
         <div class="controls">
             <div class="control-row">
                 <button class="ctrl-btn" onclick="playerMove('left')">◀ 左</button>
@@ -307,13 +183,13 @@
                 <button class="ctrl-btn" onclick="playerMove('right')">右 ▶</button>
             </div>
             <div class="control-row">
-                <button class="ctrl-btn" onclick="playerMove('down')" style="flex: 2;">⬇ ソフト</button>
-                <button class="ctrl-btn" onclick="playerQuickDrop()" style="flex: 1; background: #6200ee;">⚡ 急降下</button>
+                <button class="ctrl-btn" onclick="playerHold()" style="background: #3a0ca3;">📦 ホールド</button>
+                <button class="ctrl-btn" onclick="playerMove('down')">⬇ ソフト</button>
+                <button class="ctrl-btn" onclick="playerQuickDrop()" style="background: #6200ee;">⚡ 急降下</button>
             </div>
         </div>
     </div>
 
-    <!-- リザルト画面 -->
     <div id="result-modal">
         <h2 id="result-title">Game Over</h2>
         <p id="result-text">決着がつきました</p>
@@ -321,8 +197,8 @@
     </div>
 
 <script>
-    // ⚠️ Python側（Colab等）の ngrok 公開リンクに必ず書き換えてください（末尾に /predict を忘れない）
-    const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev"";
+    // ⚠️ Python側（Colab等）の ngrok 公開リンクに必ず書き換えてください（末尾に /predict）
+    const BACKEND_URL = "https://YOUR_NGROK_URL_HERE/predict";
 
     const ROWS = 20;
     const COLS = 10;
@@ -525,6 +401,27 @@
             this.draw();
         }
 
+        hold() {
+            if (!this.canHold || gameOver) return;
+            if (this.holdPiece === null) {
+                this.holdPiece = this.currentPiece.typeId;
+                this.currentPiece = this.spawnPiece();
+            } else {
+                let temp = this.currentPiece.typeId;
+                this.currentPiece = {
+                    shape: SHAPES[this.holdPiece],
+                    typeId: this.holdPiece,
+                    x: Math.floor(COLS / 2) - Math.floor(SHAPES[this.holdPiece][0].length / 2),
+                    y: 0,
+                    rot: 0
+                };
+                this.holdPiece = temp;
+            }
+            this.canHold = false;
+            this.drawSideBoxes();
+            this.draw();
+        }
+
         moveDown() {
             if (gameOver) return;
             if (!this.checkCollision(this.currentPiece.x, this.currentPiece.y + 1, this.currentPiece.shape)) {
@@ -623,7 +520,10 @@
         if (player) player.quickDrop();
     }
 
-    // キーボード操作の完全バインド
+    function playerHold() {
+        if (player) player.hold();
+    }
+
     window.addEventListener('keydown', e => {
         if (gameOver || document.getElementById('start-screen').style.display !== 'none' || !player) return;
         
@@ -639,7 +539,6 @@
         else if (e.key === 'c' || e.key === 'C') player.hold();
     });
 
-    // 🔴 ハエAIが確実に動くよう通信処理を再構築
     async function aiLoop() {
         if (gameOver || !ai) return;
         try {
@@ -653,7 +552,6 @@
             });
             
             if (!response.ok) {
-                console.error("AIサーバーエラー status:", response.status);
                 if (!gameOver) setTimeout(aiLoop, 2000);
                 return;
             }
@@ -663,7 +561,6 @@
             try {
                 data = JSON.parse(text);
             } catch (e) {
-                console.error("⚠️ ngrokの警告ページを検知しました。リクエストを再試行します...");
                 if (!gameOver) setTimeout(aiLoop, 2000);
                 return;
             }
@@ -681,7 +578,7 @@
                 document.getElementById('aiScore').innerText = ai.score;
             }
         } catch (err) {
-            console.error("❌ AI通信エラー:", err);
+            console.error("AI通信エラー:", err);
         }
         
         if (!gameOver) {
