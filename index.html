@@ -123,7 +123,6 @@
             color: #888;
         }
         
-        /* キャンバスの解像度と表示サイズを完全一致させる（真っ黒バグの解消） */
         canvas.mini-canvas {
             background: #000;
             display: block;
@@ -159,7 +158,7 @@
             font-weight: bold;
         }
 
-        /* スマホ用操作ボタン */
+        /* スマホ用操作ボタン（PCでは非表示） */
         .controls {
             display: flex;
             flex-direction: column;
@@ -223,7 +222,7 @@
             .panel-title { font-size: 0.95rem; }
             .score-board { font-size: 0.95rem; }
             .mini-container { font-size: 0.75rem; }
-            .controls { display: none; }
+            .controls { display: none; } /* PCではボタンを隠しキーボード操作に集中 */
         }
     </style>
 </head>
@@ -299,8 +298,8 @@
     </div>
 
 <script>
-    // ⚠️ Python側（Colab等）の ngrok 公開リンクに書き換えてください
-    const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+    // ⚠️ Python側（Colab等）の ngrok 公開リンクに必ず書き換えてください
+    const BACKEND_URL = "https://YOUR_NGROK_URL_HERE/predict";
 
     const ROWS = 20;
     const COLS = 10;
@@ -601,8 +600,14 @@
         if (player) player.quickDrop();
     }
 
-    document.addEventListener('keydown', e => {
+    // 🔴 PCでのキーボード操作が確実に効くようにグローバルリスナーを修正
+    window.addEventListener('keydown', e => {
         if (gameOver || document.getElementById('start-screen').style.display !== 'none' || !player) return;
+        
+        if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', ' '].includes(e.key)) {
+            e.preventDefault(); // 画面スクロールを防止
+        }
+
         if (e.key === 'ArrowLeft') playerMove('left');
         else if (e.key === 'ArrowRight') playerMove('right');
         else if (e.key === 'ArrowDown') playerMove('down');
@@ -611,6 +616,7 @@
         else if (e.key === 'c' || e.key === 'C') player.hold();
     });
 
+    // 🔴 ハエAIの思考ループ（エラー時も絶対に止まらないよう堅牢化）
     async function aiLoop() {
         if (gameOver || !ai) return;
         try {
@@ -627,7 +633,8 @@
             try {
                 data = JSON.parse(text);
             } catch (e) {
-                console.error("ngrok警告ページの可能性あり");
+                console.error("⚠️ AIレスポンスがJSONではありません（ngrok警告ページの可能性があります）。再試行します...");
+                if (!gameOver) setTimeout(aiLoop, 1500);
                 return;
             }
 
@@ -644,8 +651,10 @@
                 document.getElementById('aiScore').innerText = ai.score;
             }
         } catch (err) {
-            console.error("AI通信エラー:", err);
+            console.error("❌ AI通信エラー:", err);
         }
+        
+        // 次の思考へ確実に繋げる
         if (!gameOver) {
             setTimeout(aiLoop, 800);
         }
