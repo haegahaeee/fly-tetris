@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Human vs Fly-Brain Tetris (FlyTris)</title>
+    <title>Human vs. MaleCNS FlyTris</title>
     <style>
         body {
             background-color: #121212;
@@ -16,20 +16,9 @@
             height: 100vh;
             margin: 0;
         }
-        h1 {
-            margin-bottom: 5px;
-            font-size: 1.8rem;
-            color: #bb86fc;
-        }
-        .subtitle {
-            font-size: 0.9rem;
-            color: #888;
-            margin-bottom: 20px;
-        }
-        .container {
-            display: flex;
-            gap: 40px;
-        }
+        h1 { margin-bottom: 5px; font-size: 1.8rem; color: #bb86fc; }
+        .subtitle { font-size: 0.9rem; color: #888; margin-bottom: 20px; }
+        .container { display: flex; gap: 40px; }
         .board-box {
             text-align: center;
             background: #1e1e1e;
@@ -37,23 +26,12 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        canvas {
-            border: 2px solid #333;
-            background-color: #000;
-            display: block;
-            margin: 0 auto;
-        }
-        .score {
-            margin-top: 10px;
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-        /* リザルトモーダル */
+        canvas { border: 2px solid #333; background-color: #000; display: block; margin: 0 auto; }
+        .score { margin-top: 10px; font-size: 1.1rem; font-weight: bold; }
         #result-modal {
             display: none;
             position: fixed;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: #222;
             border: 2px solid #bb86fc;
@@ -63,48 +41,32 @@
             box-shadow: 0 0 30px rgba(187, 134, 252, 0.4);
             z-index: 100;
         }
-        #result-modal h2 {
-            margin-top: 0;
-            color: #03dac6;
-        }
+        #result-modal h2 { margin-top: 0; color: #03dac6; }
         #result-modal button {
-            background: #bb86fc;
-            color: #121212;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 15px;
-        }
-        #result-modal button:hover {
-            background: #9a67ea;
+            background: #bb86fc; color: #121212;
+            border: none; padding: 10px 20px; font-size: 1rem;
+            font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 15px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Human vs. Fly-Brain Tetris</h1>
-    <div class="subtitle">Connectome-Constrained Mushroom Body Opponent</div>
+    <h1>Human vs. MaleCNS FlyTris</h1>
+    <div class="subtitle">Dopamine-Gated Mushroom Body Connectome Opponent</div>
 
     <div class="container">
-        <!-- プレイヤー側 -->
         <div class="board-box">
             <h2>Player</h2>
             <canvas id="playerCanvas" width="200" height="400"></canvas>
             <div class="score">Score: <span id="playerScore">0</span></div>
         </div>
-
-        <!-- ハエ（AI）側 -->
         <div class="board-box">
-            <h2>Fly AI (MaleCNS)</h2>
+            <h2>Fly AI (MaleCNS v1.0)</h2>
             <canvas id="aiCanvas" width="200" height="400"></canvas>
             <div class="score">Reward: <span id="aiRewardDisplay">0.0</span></div>
         </div>
     </div>
 
-    <!-- リザルト画面 -->
     <div id="result-modal">
         <h2 id="result-title">Game Over</h2>
         <p id="result-text">決着がつきました</p>
@@ -112,9 +74,8 @@
     </div>
 
 <script>
-    // ⚠️ ここにPython側（Colab等）で発行された ngrok の公開リンクを設定してください
-    // 例: "https://xxxx.ngrok-free.dev/predict"
-    const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+    // ⚠️ Colab等で発行された ngrok の公開リンクに書き換えてください
+    const BACKEND_URL = "https://YOUR_NGROK_URL_HERE/predict";
 
     const ROWS = 20;
     const COLS = 10;
@@ -127,18 +88,17 @@
 
     const SHAPES = [
         [],
-        [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
-        [[2,0,0],[2,2,2],[0,0,0]],                  // J
-        [[0,0,3],[3,3,3],[0,0,0]],                  // L
-        [[4,4],[4,4]],                              // O
-        [[0,5,5],[5,5,0],[0,0,0]],                  // S
-        [[0,6,0],[6,6,6],[0,0,0]],                  // T
-        [[7,7,0],[0,7,7],[0,0,0]]                   // Z
+        [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+        [[2,0,0],[2,2,2],[0,0,0]],
+        [[0,0,3],[3,3,3],[0,0,0]],
+        [[4,4],[4,4]],
+        [[0,5,5],[5,5,0],[0,0,0]],
+        [[0,6,0],[6,6,6],[0,0,0]],
+        [[7,7,0],[0,7,7],[0,0,0]]
     ];
 
     let gameOver = false;
 
-    // プレイヤー用クラス
     class TetrisGame {
         constructor(canvasId, scoreId, isAI = false) {
             this.canvas = document.getElementById(canvasId);
@@ -167,7 +127,6 @@
             this.ctx.fillStyle = '#000';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-            // グリッド描画
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     if (this.grid[r][c] > 0) {
@@ -176,7 +135,6 @@
                 }
             }
 
-            // 現在のピース描画
             if (this.currentPiece) {
                 const shape = this.currentPiece.shape;
                 for (let r = 0; r < shape.length; r++) {
@@ -214,7 +172,7 @@
                 for (let c = 0; c < shape[r].length; c++) {
                     if (shape[r][c] > 0) {
                         if (this.currentPiece.y + r < 0) {
-                            triggerGameOver(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
+                            triggerResultModal(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
                             return;
                         }
                         this.grid[this.currentPiece.y + r][this.currentPiece.x + c] = this.currentPiece.typeId;
@@ -224,7 +182,7 @@
             this.clearLines();
             this.currentPiece = this.spawnPiece();
             if (this.checkCollision(this.currentPiece.x, this.currentPiece.y, this.currentPiece.shape)) {
-                triggerGameOver(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
+                triggerResultModal(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
             }
         }
 
@@ -235,7 +193,7 @@
                     this.grid.splice(r, 1);
                     this.grid.unshift(Array(COLS).fill(0));
                     linesCleared++;
-                    r++; // 同行再チェック
+                    r++;
                 }
             }
             if (linesCleared > 0) {
@@ -243,11 +201,10 @@
                     this.score += linesCleared * 100;
                     this.scoreElement.innerText = this.score;
                 } else {
-                    // ハエ側がラインを消したらAIに正の報酬
-                    this.aiReward = linesCleared * 5.0;
+                    this.aiReward = linesCleared * 10.0;
                 }
             } else {
-                this.aiReward = -0.1; // 毎ターンの微小ペナルティ（素早く消させるため）
+                this.aiReward = -0.2;
             }
         }
 
@@ -265,7 +222,6 @@
     const player = new TetrisGame('playerCanvas', 'playerScore', false);
     const ai = new TetrisGame('aiCanvas', 'aiRewardDisplay', true);
 
-    // プレイヤーの操作キー
     document.addEventListener('keydown', e => {
         if (gameOver) return;
         if (e.key === 'ArrowLeft') {
@@ -275,7 +231,6 @@
         } else if (e.key === 'ArrowDown') {
             player.moveDown();
         } else if (e.key === 'ArrowUp') {
-            // 回転
             let shape = player.currentPiece.shape;
             let rotated = shape[0].map((_, i) => shape.map(row => row[i]).reverse());
             if (!player.checkCollision(player.currentPiece.x, player.currentPiece.y, rotated)) {
@@ -285,34 +240,25 @@
         player.draw();
     });
 
-    // プレイヤーの自動落下ループ (500ms)
     setInterval(() => {
         if (!gameOver) player.moveDown();
     }, 500);
 
-    // ハエ（AI）の思考・行動ループ (800ms)
     async function aiLoop() {
         if (gameOver) return;
-
         try {
             const response = await fetch(BACKEND_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    grid: ai.grid,
-                    reward: ai.aiReward
-                })
+                body: JSON.stringify({ grid: ai.grid, reward: ai.aiReward })
             });
-
             const data = await response.json();
             if (data && typeof data.bestX !== 'undefined') {
                 ai.currentPiece.x = data.bestX;
-                // 回転の反映
                 for (let i = 0; i < data.bestRot; i++) {
                     let shape = ai.currentPiece.shape;
                     ai.currentPiece.shape = shape[0].map((_, idx) => shape.map(row => row[idx]).reverse());
                 }
-                // 即座に着地させる
                 while (!ai.checkCollision(ai.currentPiece.x, ai.currentPiece.y + 1, ai.currentPiece.shape)) {
                     ai.currentPiece.y++;
                 }
@@ -322,7 +268,6 @@
         } catch (err) {
             console.error("AI通信エラー:", err);
         }
-
         if (!gameOver) {
             setTimeout(aiLoop, 800);
         }
@@ -335,7 +280,6 @@
         document.getElementById('result-modal').style.display = 'block';
     }
 
-    // 初回描画とAIスタート
     player.draw();
     ai.draw();
     setTimeout(aiLoop, 1000);
