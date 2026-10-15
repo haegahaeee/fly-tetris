@@ -2,8 +2,13 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Fly-Brain Tetris - Ultimate Connectome Battle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Fly-Brain Tetris - Touch & Battle Edition</title>
     <style>
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
         body {
             background-color: #07090e;
             color: #f8fafc;
@@ -11,67 +16,71 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
+            padding: 10px;
             overflow-x: hidden;
+            user-select: none;
         }
         h1 {
-            margin: 5px 0 10px 0;
-            font-size: 1.4rem;
+            margin: 5px 0;
+            font-size: 1.2rem;
             color: #38bdf8;
-            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            text-align: center;
         }
         .mode-selector {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
         .mode-btn {
             background: #1e293b;
             color: #94a3b8;
             border: 1px solid #475569;
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            transition: all 0.2s;
+            font-size: 0.8rem;
         }
         .mode-btn.active {
             background: #0284c7;
             color: white;
             border-color: #38bdf8;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
         }
         .battle-container {
             display: flex;
-            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
             background: #111827;
-            padding: 15px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 12px;
             border: 1px solid #1f2937;
+            width: 100%;
+            max-width: 800px;
         }
         .player-side, .ai-side {
             display: flex;
-            gap: 10px;
+            gap: 6px;
         }
         .side-panel {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            width: 80px;
+            gap: 6px;
+            width: 65px;
         }
         .panel-box {
             background: #030712;
-            border: 2px solid #374151;
-            border-radius: 8px;
-            padding: 6px;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            padding: 4px;
             text-align: center;
         }
         .panel-box h3 {
-            margin: 0 0 4px 0;
-            font-size: 0.7rem;
+            margin: 0 0 2px 0;
+            font-size: 0.65rem;
             color: #9ca3af;
         }
         canvas.mini-canvas {
@@ -83,20 +92,17 @@
         .board-wrapper {
             position: relative;
             background: #000;
-            border: 3px solid #374151;
-            border-radius: 8px;
+            border: 2px solid #374151;
+            border-radius: 6px;
         }
-        .board-wrapper.player-board { border-color: #38bdf8; box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.2); }
-        .board-wrapper.ai-board { border-color: #ec4899; box-shadow: inset 0 0 15px rgba(236, 72, 153, 0.2); }
+        .board-wrapper.player-board { border-color: #38bdf8; }
+        .board-wrapper.ai-board { border-color: #ec4899; }
         
-        canvas.tetris-canvas {
-            display: block;
-        }
         .board-title {
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .player-title { color: #38bdf8; }
         .ai-title { color: #ec4899; }
@@ -104,51 +110,20 @@
         .control-panel {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            width: 180px;
+            gap: 6px;
+            width: 100%;
+            max-width: 160px;
             justify-content: space-between;
         }
         .info-box {
             background: #030712;
-            border: 2px solid #38bdf8;
-            border-radius: 8px;
-            padding: 8px;
-            text-align: center;
-        }
-        .info-box h3 { margin: 0; font-size: 0.7rem; color: #9ca3af; }
-        .info-box p { margin: 4px 0 0 0; font-size: 1.1rem; font-weight: bold; color: #facc15; }
-
-        /* ご提示いただいた脳画像のリアルアニメーション演出 */
-        .brain-animation-box {
-            background: #030712;
-            border: 2px solid #ec4899;
-            border-radius: 8px;
-            padding: 8px;
-            text-align: center;
-            overflow: hidden;
-        }
-        .brain-animation-box h3 { margin: 0 0 4px 0; font-size: 0.7rem; color: #f472b6; }
-        
-        .brain-image-container {
-            width: 100%;
-            height: 90px;
+            border: 1px solid #38bdf8;
             border-radius: 6px;
-            overflow: hidden;
-            position: relative;
-            border: 1px solid #be185d;
-            background: #000;
+            padding: 6px;
+            text-align: center;
         }
-        .brain-image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            animation: brain-pulse-glow 3s infinite alternate ease-in-out;
-        }
-        @keyframes brain-pulse-glow {
-            0% { transform: scale(1); filter: brightness(0.9) drop-shadow(0 0 2px #ec4899); }
-            50% { transform: scale(1.06); filter: brightness(1.2) drop-shadow(0 0 10px #38bdf8); }
-            100% { transform: scale(1); filter: brightness(0.9) drop-shadow(0 0 2px #ec4899); }
-        }
+        .info-box h3 { margin: 0; font-size: 0.65rem; color: #9ca3af; }
+        .info-box p { margin: 2px 0 0 0; font-size: 1rem; font-weight: bold; color: #facc15; }
 
         .btn-start {
             background: #0284c7;
@@ -158,17 +133,74 @@
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
             text-align: center;
+            font-size: 0.9rem;
         }
-        .btn-start:hover { background: #0ea5e9; }
+        .btn-start:active { background: #0ea5e9; }
+
+        /* スマホ・タブレット用タッチコントローラー */
+        .touch-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 10px;
+        }
+        .touch-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .t-btn {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+        }
+        .t-btn:active {
+            background: #0284c7;
+            border-color: #38bdf8;
+        }
+        .t-btn-drop {
+            background: #0284c7;
+            color: #fff;
+        }
+
+        /* リザルト画面モーダル */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-card {
+            background: #111827;
+            border: 2px solid #38bdf8;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            width: 280px;
+        }
+        .modal-card h2 { margin: 0 0 10px 0; font-size: 1.5rem; }
+        .modal-card.win h2 { color: #4ade80; }
+        .modal-card.lose h2 { color: #f87171; }
+        .modal-stats { margin: 15px 0; text-align: left; font-size: 0.85rem; line-height: 1.6; }
     </style>
 </head>
 <body>
 
-    <h1>🧠 Fly-Brain Tetris (Connectome Battle) 🎮</h1>
+    <h1>🧠 Fly-Brain Tetris (Battle) 🎮</h1>
     
-    <!-- 3つのモード選択 -->
     <div class="mode-selector">
         <button class="mode-btn active" id="modeNormal" onclick="setGameMode('normal')">Normal</button>
         <button class="mode-btn" id="modeQuick" onclick="setGameMode('quick')">Quick (1:30)</button>
@@ -176,96 +208,116 @@
     </div>
 
     <div class="battle-container">
-        <!-- プレイヤー側（左） -->
+        <!-- プレイヤー側 -->
         <div class="player-side">
             <div class="side-panel">
                 <div class="panel-box">
                     <h3>HOLD</h3>
-                    <canvas id="playerHold" width="50" height="50" class="mini-canvas"></canvas>
+                    <canvas id="playerHold" width="45" height="45" class="mini-canvas"></canvas>
                 </div>
                 <div class="panel-box" style="flex-grow:1;">
                     <h3>STATS</h3>
-                    <p id="playerLines" style="font-size:0.7rem; color:#38bdf8; margin:5px 0;">Lines: 0</p>
-                    <p id="timerDisplay" style="font-size:0.7rem; color:#facc15; margin:5px 0;">Time: --</p>
+                    <p id="playerLines" style="font-size:0.65rem; color:#38bdf8; margin:4px 0;">Lines: 0</p>
+                    <p id="timerDisplay" style="font-size:0.65rem; color:#facc15; margin:4px 0;">Time: ∞</p>
                 </div>
             </div>
             <div>
-                <div class="board-title player-title">PLAYER (YOU)</div>
+                <div class="board-title player-title">YOU</div>
                 <div class="board-wrapper player-board">
-                    <canvas id="playerCanvas" width="200" height="440"></canvas>
+                    <canvas id="playerCanvas" width="160" height="352"></canvas>
                 </div>
             </div>
             <div class="side-panel">
-                <div class="panel-box" style="height: 150px;">
-                    <h3>NEXT (3)</h3>
-                    <canvas id="playerNext" width="50" height="135" class="mini-canvas"></canvas>
+                <div class="panel-box" style="height: 120px;">
+                    <h3>NEXT</h3>
+                    <canvas id="playerNext" width="45" height="100" class="mini-canvas"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- 中央コントロール＆脳アニメーションパネル -->
+        <!-- 中央コントロール -->
         <div class="control-panel">
             <div class="info-box">
-                <h3>BATTLE SCORE</h3>
+                <h3>SCORE</h3>
                 <p id="score">0</p>
             </div>
-
-            <!-- ご提示いただいた脳画像のリアルアニメーション -->
-            <div class="brain-animation-box">
-                <h3>CONNECTOME AI</h3>
-                <div class="brain-image-container">
-                    <!-- ご提示いただいた脳画像の参照（またはデータURL） -->
-                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='100' fill='%231e293b'><rect width='200' height='100'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2338bdf8' font-size='12'>Janelia male-cns:v1.0</text></svg>" id="brainImg" alt="Fly Brain Connectome">
-                </div>
-                <div id="aiState" style="font-size: 0.65rem; color: #f472b6; margin-top: 4px;">AI Standby</div>
+            <div class="info-box">
+                <h3>AI STATUS</h3>
+                <p id="aiState" style="font-size: 0.7rem; color: #ec4899;">Standby</p>
             </div>
-
             <button class="btn-start" onclick="startBattle()">START BATTLE</button>
         </div>
 
-        <!-- ハエAI側（右） -->
+        <!-- ハエAI側 -->
         <div class="ai-side">
             <div>
-                <div class="board-title ai-title">FLY AI (male-cns)</div>
+                <div class="board-title ai-title">FLY AI</div>
                 <div class="board-wrapper ai-board">
-                    <canvas id="aiCanvas" width="200" height="440"></canvas>
+                    <canvas id="aiCanvas" width="160" height="352"></canvas>
                 </div>
             </div>
             <div class="side-panel">
-                <div class="panel-box" style="height: 150px;">
+                <div class="panel-box" style="height: 120px;">
                     <h3>AI NEXT</h3>
-                    <canvas id="aiNext" width="50" height="135" class="mini-canvas"></canvas>
+                    <canvas id="aiNext" width="45" height="100" class="mini-canvas"></canvas>
                 </div>
                 <div class="panel-box" style="flex-grow:1;">
-                    <h3>AI STATUS</h3>
-                    <p id="aiLines" style="font-size:0.7rem; color:#ec4899; margin:5px 0;">Lines: 0</p>
+                    <h3>AI STATS</h3>
+                    <p id="aiLines" style="font-size:0.65rem; color:#ec4899; margin:4px 0;">Lines: 0</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // ngrokバックエンドURL（必要に応じて書き換えてください）
-        const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+    <!-- スマホ・タブレット用 タッチコントローラーボタン -->
+    <div class="touch-controls">
+        <div class="touch-row">
+            <div class="t-btn" onclick="playerHold()">HOLD</div>
+            <div class="t-btn" onclick="playerRotate(1)">🔄 回転</div>
+            <div class="t-btn t-btn-drop" onclick="playerHardDrop()">⚡ 落下</div>
+        </div>
+        <div class="touch-row">
+            <div class="t-btn" onclick="playerMove(-1)">◀ 左</div>
+            <div class="t-btn" onclick="playerDrop()">▼ 下</div>
+            <div class="t-btn" onclick="playerMove(1)">右 ▶</div>
+        </div>
+    </div>
 
-        const scale = 20;
+    <!-- 勝敗・リザルト画面 -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-card" id="modalCard">
+            <h2 id="resultTitle">RESULT</h2>
+            <div class="modal-stats">
+                <div>🏆 勝者: <span id="resWinner">-</span></div>
+                <div>💯 スコア: <span id="resScore">0</span></div>
+                <div>🧱 消去ライン (あなた): <span id="resPlayerLines">0</span></div>
+                <div>🪰 消去ライン (ハエAI): <span id="resAILines">0</span></div>
+            </div>
+            <button class="btn-start" style="width:100%" onclick="closeResult()">閉じる</button>
+        </div>
+    </div>
+
+    <script>
+        // 指定された ngrok URLを直書き込み
+        const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev/predict";
+
+        const scale = 16;
         const ROWS = 22;
         const COLS = 10;
 
-        let gameMode = 'normal'; // 'normal', 'quick', 'gachi'
+        let gameMode = 'normal';
         let battleActive = false;
         let gameTimer = 90;
         let timerInterval = null;
+        let score = 0;
 
-        // プレイヤーの状態
         const pCanvas = document.getElementById('playerCanvas');
         const pCtx = pCanvas.getContext('2d');
         pCtx.scale(scale, scale);
         let playerArena = createMatrix(COLS, ROWS);
-        let player = { pos: {x:0, y:0}, matrix: null, hold: null, canHold: true, score: 0, lines: 0 };
+        let player = { pos: {x:0, y:0}, matrix: null, hold: null, canHold: true, lines: 0 };
         let playerNextQueue = [];
 
-        // ハエAIの状態
         const aiCanvas = document.getElementById('aiCanvas');
         const aiCtx = aiCanvas.getContext('2d');
         aiCtx.scale(scale, scale);
@@ -274,7 +326,7 @@
         let aiNextQueue = [];
 
         const COLORS = [
-            null, '#38bdf8', '#facc15', '#c084fc', '#4ade80', '#f87171', '#60a5fa', '#fb923c'
+            null, '#38bdf8', '#facc15', '#c084fc', '#4ade80', '#f87171', '#60a5fa', '#fb923c', '#64748b'
         ];
 
         function createMatrix(w, h) {
@@ -319,12 +371,12 @@
             mCtx.fillStyle = '#030712';
             mCtx.fillRect(0, 0, canvasEl.width, canvasEl.height);
             if (!matrix) return;
-            const mScale = 12;
+            const mScale = 10;
             matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) {
                         mCtx.fillStyle = COLORS[colorIdx || value];
-                        mCtx.fillRect(x * mScale + 5, y * mScale + 5, mScale, mScale);
+                        mCtx.fillRect(x * mScale + 2, y * mScale + 2, mScale, mScale);
                     }
                 });
             });
@@ -336,12 +388,12 @@
             mCtx.fillRect(0, 0, canvasEl.width, canvasEl.height);
             queue.forEach((matrix, idx) => {
                 if (!matrix) return;
-                const mScale = 10;
+                const mScale = 8;
                 matrix.forEach((row, y) => {
                     row.forEach((value, x) => {
                         if (value !== 0) {
                             mCtx.fillStyle = COLORS[value];
-                            mCtx.fillRect(x * mScale + 5, y * mScale + (idx * 40) + 5, mScale, mScale);
+                            mCtx.fillRect(x * mScale + 2, y * mScale + (idx * 30) + 2, mScale, mScale);
                         }
                     });
                 });
@@ -349,21 +401,19 @@
         }
 
         function draw() {
-            // Player Board
             pCtx.fillStyle = '#000';
             pCtx.fillRect(0, 0, COLS, ROWS);
             drawMatrix(playerArena, {x:0, y:0}, pCtx);
             drawMatrix(player.matrix, player.pos, pCtx);
 
-            // AI Board
             aiCtx.fillStyle = '#000';
             aiCtx.fillRect(0, 0, COLS, ROWS);
             drawMatrix(aiArena, {x:0, y:0}, aiCtx);
             drawMatrix(ai.matrix, ai.pos, aiCtx);
         }
 
-        // --- プレイヤー操作ロジック ---
         function playerDrop() {
+            if (!battleActive) return;
             player.pos.y++;
             if (collide(playerArena, player)) {
                 player.pos.y--;
@@ -374,6 +424,7 @@
         }
 
         function playerHardDrop() {
+            if (!battleActive) return;
             while (!collide(playerArena, player)) {
                 player.pos.y++;
             }
@@ -384,11 +435,13 @@
         }
 
         function playerMove(dir) {
+            if (!battleActive) return;
             player.pos.x += dir;
             if (collide(playerArena, player)) player.pos.x -= dir;
         }
 
         function playerRotate(dir) {
+            if (!battleActive) return;
             const posX = player.pos.x;
             let offset = 1;
             rotate(player.matrix, dir);
@@ -404,7 +457,7 @@
         }
 
         function playerHold() {
-            if (!player.canHold) return;
+            if (!battleActive || !player.canHold) return;
             if (!player.hold) {
                 player.hold = player.matrix;
                 resetPlayerPiece();
@@ -456,7 +509,7 @@
             player.canHold = true;
             drawQueue(playerNextQueue, document.getElementById('playerNext'));
             if (collide(playerArena, player)) {
-                playerArena.forEach(r => r.fill(0));
+                endGame('AI (You Lose)');
             }
         }
 
@@ -477,15 +530,16 @@
                 cleared++;
             }
             if (cleared > 0) {
+                score += cleared * 100 * cleared;
+                document.getElementById('score').innerText = score;
                 if (target === 'player') {
                     player.lines += cleared;
                     document.getElementById('playerLines').innerText = `Lines: ${player.lines}`;
-                    // Gachiモードでの妨害送信
                     if (gameMode === 'gachi' && cleared >= 2) sendGarbageToAI(cleared - 1);
                 } else {
-                    ai.lines++;
+                    ai.lines += cleared;
                     document.getElementById('aiLines').innerText = `Lines: ${ai.lines}`;
-                    if (gameMode === 'gachi') sendGarbageToPlayer(1);
+                    if (gameMode === 'gachi' && cleared >= 2) sendGarbageToPlayer(cleared - 1);
                 }
             }
         }
@@ -494,7 +548,7 @@
             for(let i=0; i<lines; i++) {
                 aiArena.shift();
                 const garbageRow = new Array(COLS).fill(8);
-                garbageRow[Math.floor(Math.random() * COLS)] = 0; // 隙間を作る
+                garbageRow[Math.floor(Math.random() * COLS)] = 0;
                 aiArena.push(garbageRow);
             }
         }
@@ -508,31 +562,28 @@
             }
         }
 
-        // --- ハエAI思考ループ ---
         async function aiStep() {
             if (!battleActive) return;
             try {
-                document.getElementById('aiState').innerText = "🧠 コネクトーム演算中...";
-                const res = await fetch(BACKEND_URL, {
+                document.getElementById('aiState').innerText = "Thinking...";
+                const res = await fetch(`${BACKEND_URL}/predict`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ grid: aiArena })
                 });
                 const data = await res.json();
                 
-                document.getElementById('aiState').innerText = "⚡ ハエ急降下！";
                 ai.pos.x = data.bestX;
                 for(let r=0; r < data.bestRot; r++) rotate(ai.matrix, 1);
                 
-                // AIハードドロップ実行
                 while (!collide(aiArena, ai)) ai.pos.y++;
                 ai.pos.y--;
                 merge(aiArena, ai);
                 resetAIPiece();
                 checkLines(aiArena, 'ai');
+                document.getElementById('aiState').innerText = "Drop!";
             } catch(e) {
-                document.getElementById('aiState').innerText = "⚠️ 通信待機中";
-                // フォールバック自動落下
+                document.getElementById('aiState').innerText = "Fallback";
                 ai.pos.y++;
                 if (collide(aiArena, ai)) {
                     ai.pos.y--;
@@ -540,7 +591,7 @@
                     resetAIPiece();
                 }
             }
-            if (battleActive) setTimeout(aiStep, 1200);
+            if (battleActive) setTimeout(aiStep, 1000);
         }
 
         function resetAIPiece() {
@@ -550,21 +601,23 @@
             ai.pos.y = 0;
             ai.pos.x = (COLS / 2 | 0) - (ai.matrix[0].length / 2 | 0);
             drawQueue(aiNextQueue, document.getElementById('aiNext'));
-            if (collide(aiArena, ai)) aiArena.forEach(r => r.fill(0));
+            if (collide(aiArena, ai)) {
+                endGame('YOU WIN!');
+            }
         }
 
-        // キーボード入力
-        document.addEventListener('keydown', e => {
+        // キーボード入力サポート（PC用）
+        window.addEventListener('keydown', e => {
             if (!battleActive) return;
+            if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', ' '].includes(e.key)) e.preventDefault();
             if (e.key === 'ArrowLeft') playerMove(-1);
             else if (e.key === 'ArrowRight') playerMove(1);
             else if (e.key === 'ArrowDown') playerDrop();
             else if (e.key === 'ArrowUp') playerRotate(1);
-            else if (e.key === ' ') { e.preventDefault(); playerHardDrop(); }
+            else if (e.key === ' ') playerHardDrop();
             else if (e.key === 'c' || e.key === 'C') playerHold();
         });
 
-        // ゲームループ
         let dropCounter = 0;
         let lastTime = 0;
         function update(time = 0) {
@@ -585,6 +638,8 @@
             aiArena.forEach(r => r.fill(0));
             player.lines = 0;
             ai.lines = 0;
+            score = 0;
+            document.getElementById('score').innerText = "0";
             document.getElementById('playerLines').innerText = "Lines: 0";
             document.getElementById('aiLines').innerText = "Lines: 0";
             
@@ -608,13 +663,34 @@
                     document.getElementById('timerDisplay').innerText = `Time: ${gameTimer}s`;
                     if (gameTimer <= 0) {
                         clearInterval(timerInterval);
-                        battleActive = false;
-                        alert("タイムアップ！");
+                        const winner = player.lines >= ai.lines ? 'YOU WIN!' : 'AI WIN!';
+                        endGame(winner);
                     }
                 }, 1000);
             } else {
                 document.getElementById('timerDisplay').innerText = `Time: ∞`;
             }
+        }
+
+        function endGame(winner) {
+            battleActive = false;
+            clearInterval(timerInterval);
+            
+            const modal = document.getElementById('resultModal');
+            const card = document.getElementById('modalCard');
+            card.className = winner.includes('YOU') ? 'modal-card win' : 'modal-card lose';
+            
+            document.getElementById('resultTitle').innerText = winner.includes('YOU') ? '🎉 VICTORY!' : '💀 DEFEAT';
+            document.getElementById('resWinner').innerText = winner;
+            document.getElementById('resScore').innerText = score;
+            document.getElementById('resPlayerLines').innerText = player.lines;
+            document.getElementById('resAILines').innerText = ai.lines;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeResult() {
+            document.getElementById('resultModal').style.display = 'none';
         }
     </script>
 </body>
