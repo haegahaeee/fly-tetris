@@ -147,10 +147,8 @@
         </div>
 
         <div class="battle-arena">
+            <!-- プレイヤー側 (左): NEXTを上に、HOLDを下に配置 -->
             <div class="player-panel">
-                <div class="side-box">
-                    <div class="mini-container">HOLD<canvas id="playerHoldCanvas" width="40" height="40" class="mini-canvas"></canvas></div>
-                </div>
                 <div>
                     <div class="panel-title player-title">PLAYER</div>
                     <canvas id="playerCanvas" width="200" height="400" class="main-board"></canvas>
@@ -158,13 +156,12 @@
                 </div>
                 <div class="side-box">
                     <div class="mini-container">NEXT<canvas id="playerNextCanvas" width="40" height="120" class="mini-canvas next-canvas"></canvas></div>
+                    <div class="mini-container">HOLD<canvas id="playerHoldCanvas" width="40" height="40" class="mini-canvas"></canvas></div>
                 </div>
             </div>
 
+            <!-- ハエAI側 (右): NEXTを上に、HOLDを下に配置 -->
             <div class="player-panel">
-                <div class="side-box">
-                    <div class="mini-container">HOLD<canvas id="aiHoldCanvas" width="40" height="40" class="mini-canvas"></canvas></div>
-                </div>
                 <div>
                     <div class="panel-title ai-title">Fly AI</div>
                     <canvas id="aiCanvas" width="200" height="400" class="main-board"></canvas>
@@ -172,6 +169,7 @@
                 </div>
                 <div class="side-box">
                     <div class="mini-container">NEXT<canvas id="aiNextCanvas" width="40" height="120" class="mini-canvas next-canvas"></canvas></div>
+                    <div class="mini-container">HOLD<canvas id="aiHoldCanvas" width="40" height="40" class="mini-canvas"></canvas></div>
                 </div>
             </div>
         </div>
@@ -198,7 +196,7 @@
 
 <script>
     // ⚠️ Python側（Colab等）の ngrok 公開リンクに必ず書き換えてください（末尾に /predict）
-    const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+    const BACKEND_URL = "https://YOUR_NGROK_URL_HERE/predict";
 
     const ROWS = 20;
     const COLS = 10;
@@ -314,7 +312,7 @@
 
             this.holdCtx.fillStyle = '#0f0f17';
             this.holdCtx.fillRect(0, 0, 40, 40);
-            if (this.holdPiece) {
+            if (this.holdPiece !== null) {
                 let shape = SHAPES[this.holdPiece];
                 let color = COLORS[this.holdPiece];
                 for (let r = 0; r < shape.length; r++) {
