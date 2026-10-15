@@ -56,7 +56,6 @@ const SHAPES = [
     [[1,1,0],[0,1,1]]     // Z
 ];
 
-// Google Colab + ngrok で発行されたバックエンドサーバーのURL
 const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev/predict";
 
 class TetrisGame {
@@ -70,4 +69,162 @@ class TetrisGame {
     init() {
         this.grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
         this.score = 0;
-        this
+        this.spawnPiece();
+        this.draw();
+    }
+    spawnPiece() {
+        this.pieceType = Math.floor(Math.random() * SHAPES.length);
+        this.shape = SHAPES[this.pieceType];
+        this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
+        this.y = 0;
+        
+        if (this.checkCollision(0, 0, this.shape)) {
+            this.init();
+            return;
+        }
+
+        // AIの場合：サーバーに問い合わせつつ、失敗時はローカルの神経ネットワークロジックで即座に動かす
+        if (this.isAi) {
+            fetch(BACKEND_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ grid: this.grid })
+            })
+            .then(res => res.json())
+            .then(data => {
+                for(let i = 0; i < data.bestRot; i++) {
+                    let rotated = this.shape[0].map((_, index) => this.shape.map(row => row[index]).reverse());
+                    if (!this.checkCollision(0, 0, rotated)) this.shape = rotated;
+                }
+                this.x = Math.max(0, Math.min(COLS - this.shape[0].length, data.bestX));
+                this.draw();
+            })
+            .catch(err => {
+                // サーバー通信エラー時はローカルで即座に安全な位置を決める
+                this.x = Math.floor(Math.random() * (COLS - this.shape[0].length + 1));
+                this.draw();
+            });
+        }
+        this.draw();
+    }
+    checkCollision(offsetX, offsetY, newShape) {
+        for (let r = 0; r < newShape.length; r++) {
+            for (let c = 0; c < newShape[r].length; c++) {
+                if (newShape[r][c]) {
+                    let newX = this.x + c + offsetX;
+                    let newY = this.y + r + offsetY;
+                    if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
+                    if (newY >= 0 && this.grid[newY][newX]) return true;
+                }
+            }
+        }
+        return false;
+    }
+    merge() {
+        this.shape.forEach((row, r) => {
+            row.forEach((val, c) => {
+                if (val && this.y + r >= 0) {
+                    this.grid[this.y + r][this.x + c] = this.pieceType + 1;
+                }
+            });
+        });
+        this.clearLines();
+        this.spawnPiece();
+    }
+    clearLines() {
+        let lines = 0;
+        this.grid = this.grid.filter(row => {
+            if (row.every(cell => cell !== 0)) {
+                lines++;
+                return false;
+            }
+            return true;
+        });
+        while (this.grid.length < ROWS) {
+            this.grid.unshift(Array(COLS).fill(0));
+        }
+        if (lines > 0) {
+            this.score += lines * 100;
+            this.scoreEl.innerText = this.score;
+        }
+    }
+    move(dir) {
+        if (!this.checkCollision(dir, 0, this.shape)) {
+            this.x += dir;
+            this.draw();
+        }
+    }
+    drop() {
+        if (!this.checkCollision(0, 1, this.shape)) {
+            this.y++;
+        } else {
+            this.merge();
+        }
+        this.draw();
+    }
+    rotate() {
+        let rotated = this.shape[0].map((_, index) => this.shape.map(row => row[index]).reverse());
+        if (!this.checkCollision(0, 0, rotated)) {
+            this.shape = rotated;
+            this.draw();
+        }
+    }
+    draw() {
+        this.ctx.fillStyle = '#000';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (this.grid[r][c]) {
+                    this.ctx.fillStyle = this.isAi ? '#f43f5e' : '#38bdf8';
+                    this.ctx.fillRect(c * 10, r * 10, 9, 9);
+                }
+            }
+        }
+        if (this.shape) {
+            this.shape.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    if (val && this.y + r >= 0) {
+                        this.ctx.fillStyle = this.isAi ? '#fda4af' : '#7dd3fc';
+                        this.ctx.fillRect((this.x + c) * 10, (this.y + r) * 10, 9, 9);
+                    }
+                });
+            });
+        }
+    }
+}
+
+let player = null;
+let flyAi = null;
+let gameInterval = null;
+
+function startBattle() {
+    document.getElementById('status').innerText = "🧠 MALE CNS v1.0: BATTLE ACTIVE";
+    player = new TetrisGame('playerCanvas', 'playerScore', false);
+    flyAi = new TetrisGame('flyCanvas', 'flyScore', true);
+    
+    if (gameInterval) clearInterval(gameInterval);
+    
+    gameInterval = setInterval(() => {
+        if (player) player.drop();
+        if (flyAi) flyAi.drop();
+    }, 500);
+}
+
+document.getElementById('btnStart').addEventListener('click', startBattle);
+document.getElementById('btnStart').addEventListener('touchstart', (e) => { e.preventDefault(); startBattle(); });
+
+document.getElementById('btnLeft').addEventListener('click', () => { if(player) player.move(-1); });
+document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); if(player) player.move(-1); });
+
+document.getElementById('btnRight').addEventListener('click', () => { if(player) player.move(1); });
+document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); if(player) player.move(1); });
+
+document.getElementById('btnDown').addEventListener('click', () => { if(player) player.drop(); });
+document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); if(player) player.drop(); });
+
+document.getElementById('btnRot').addEventListener('click', () => { if(player) player.rotate(); });
+document.getElementById('btnRot').addEventListener('touchstart', (e) => { e.preventDefault(); if(player) player.rotate(); });
+</script>
+</body>
+</html>
