@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Fly-Brain Tetris (Flyverse Connectome)</title>
+    <title>Fly-Brain Tetris (Flyverse)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -237,7 +237,7 @@
         <div class="start-card">
             <h2>🧠 Fly-Brain Tetris</h2>
             <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px;">
-                Janelia <code>male-cns:v1.0</code> &amp; Flyverse Dopamine Connectome AI
+                Janelia <code>male-cns:v1.0</code> &amp; Flyverse Connectome AI
             </p>
             <div class="mode-select-box">
                 <button class="mode-option-btn selected" id="optNormal" onclick="selectStartMode('normal')">Normal (無制限)</button>
@@ -285,8 +285,8 @@
                 <p id="score">0</p>
             </div>
             <div class="info-box">
-                <h3>AI 🧠(Dopamine)</h3>
-                <p id="aiState" style="font-size: 0.6rem; color: #ec4899;">Standby</p>
+                <h3>AI</h3>
+                <p id="aiState" style="font-size: 0.6rem; color: #ec4899;">Active</p>
             </div>
             <button class="btn-action" onclick="resetToTitle()">MENU</button>
         </div>
@@ -294,7 +294,7 @@
         <!-- ハエAI側 -->
         <div class="ai-side">
             <div>
-                <div class="board-title ai-title">FLY AI (Flyverse)</div>
+                <div class="board-title ai-title">FLY AI</div>
                 <div class="board-wrapper ai-board">
                     <canvas id="aiCanvas" width="120" height="264"></canvas>
                 </div>
@@ -341,7 +341,7 @@
     </div>
 
     <script>
-        const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+        const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev/predict";
 
         const scale = 12;
         const ROWS = 22;
@@ -617,11 +617,9 @@
             }
         }
 
-        // --- 🧠 Flyverse 偽ドーパミン報酬 & 嗅覚・ケンスネット回路による知能化AI ---
         async function aiStep() {
             if (!battleActive) return;
             try {
-                document.getElementById('aiState').innerText = "🧠 Dopamine...";
                 const res = await fetch(`${BACKEND_URL}/predict`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -637,10 +635,7 @@
                 merge(aiArena, ai);
                 resetAIPiece();
                 checkLines(aiArena, 'ai');
-                document.getElementById('aiState').innerText = "✨ Reward!";
             } catch(e) {
-                // 通信エラー時でも馬鹿な積み方を防ぎ、フライバースの局所探索（匂い勾配模倣）フォールバックで穴を避ける
-                document.getElementById('aiState').innerText = "🍃 Olfactory FB";
                 ai.pos.y++;
                 if (collide(aiArena, ai)) {
                     ai.pos.y--;
@@ -648,7 +643,7 @@
                     resetAIPiece();
                 }
             }
-            if (battleActive) setTimeout(aiStep, 800); // 思考スピードを少し俊敏に強化
+            if (battleActive) setTimeout(aiStep, 800);
         }
 
         function resetAIPiece() {
