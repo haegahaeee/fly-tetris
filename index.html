@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Male CNS Connectome Tetris</title>
     <style>
-        body { background: #020617; color: #38bdf8; font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; touch-action: manipulation; }
+        body { background: #020617; color: #38bdf8; font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
         h1 { font-size: 0.85rem; text-align: center; margin: 4px 0; }
         #status { font-size: 0.7rem; color: #f43f5e; font-weight: bold; margin-bottom: 4px; text-align: center; }
         .container { display: flex; gap: 8px; margin-bottom: 6px; width: 100%; max-width: 380px; justify-content: center; }
         .board-wrapper { border: 2px solid #38bdf8; padding: 4px; border-radius: 8px; text-align: center; background: rgba(56,189,248,0.05); flex: 1; }
         canvas { background: #000; border: 1px solid #1e293b; display: block; width: 100%; max-width: 130px; height: auto; margin: 0 auto; }
         .controls { display: grid; grid-template-columns: repeat(3, 65px); gap: 6px; margin-top: 4px; }
-        button.ctrl { background: #0f172a; color: #38bdf8; border: 2px solid #38bdf8; padding: 10px; font-weight: bold; border-radius: 6px; font-size: 1.1rem; }
-        .start-btn { grid-column: span 3; background: #f43f5e !important; border-color: #f43f5e !important; color: #fff !important; font-size: 0.85rem !important; padding: 8px !important; }
+        button.ctrl { background: #0f172a; color: #38bdf8; border: 2px solid #38bdf8; padding: 14px; font-weight: bold; border-radius: 6px; font-size: 1.1rem; cursor: pointer; }
+        .start-btn { grid-column: span 3; background: #f43f5e !important; border-color: #f43f5e !important; color: #fff !important; font-size: 0.85rem !important; padding: 12px !important; }
         .score { font-size: 0.65rem; margin-top: 2px; }
     </style>
 </head>
 <body>
     <h1>🧠 Male CNS v1.0 vs HUMAN</h1>
-    <div id="status">CONNECTOME: INITIALIZING...</div>
+    <div id="status">READY: TAP START BATTLE</div>
     
     <div class="container">
         <div class="board-wrapper">
@@ -36,12 +36,12 @@
 
     <div class="controls">
         <div></div>
-        <button class="ctrl" onclick="playerRotate()">🔄</button>
+        <button class="ctrl" id="btnRot">🔄</button>
         <div></div>
-        <button class="ctrl" onclick="playerLeft()">◀</button>
-        <button class="ctrl" onclick="playerDown()">▼</button>
-        <button class="ctrl" onclick="playerRight()">▶</button>
-        <button class="ctrl start-btn" onclick="startBattle()">START BATTLE</button>
+        <button class="ctrl" id="btnLeft">◀</button>
+        <button class="ctrl" id="btnDown">▼</button>
+        <button class="ctrl" id="btnRight">▶</button>
+        <button class="ctrl start-btn" id="btnStart">START BATTLE</button>
     </div>
 
 <script>
@@ -56,26 +56,17 @@ const SHAPES = [
     [[1,1,0],[0,1,1]]     // Z
 ];
 
-// --- Male CNS v1.0 Connectome Synaptic Weight Model ---
-// Janelia male-cns:v1.0 の全神経系シナプス結合データベースに基づく重み係数・評価マトリクス
 class MaleCNSConnectomeEngine {
     constructor() {
-        this.loadCompleteConnectomeTopology();
-    }
-    loadCompleteConnectomeTopology() {
-        // 16万超のニューロンおよび5,400万超のシナプス結合特性を模した重み行列
-        // 感覚入力（視覚・機械受容）から運動出力へのシナプス伝達効率を再現
         this.synapticWeights = {
             aggregateHeightWeight: -0.5106,
             completeLinesClearedWeight: 0.7606,
             holesPenaltyWeight: -0.3566,
             bumpinessWeight: -0.1844,
-            dimorphicBias: 0.8923 // Male CNS特異的な神経回路バイアス
+            dimorphicBias: 0.8923
         };
-        console.log("Male CNS v1.0 Connectome fully loaded into browser memory.");
     }
     
-    // コネクトームのシナプス重みを用いた次手最適化評価
     evaluateBoard(grid) {
         let aggregateHeight = 0;
         let completeLines = 0;
@@ -108,12 +99,10 @@ class MaleCNSConnectomeEngine {
             }
         }
 
-        // Male CNS の全神経シナプス重みによるスコア算出
-        let score = (aggregateHeight * this.synapticWeights.aggregateHeightWeight) +
-                    (completeLines * this.synapticWeights.completeLinesClearedWeight * this.synapticWeights.dimorphicBias) +
-                    (holes * this.synapticWeights.holesPenaltyWeight) +
-                    (bumpiness * this.synapticWeights.bumpinessWeight);
-        return score;
+        return (aggregateHeight * this.synapticWeights.aggregateHeightWeight) +
+               (completeLines * this.synapticWeights.completeLinesClearedWeight * this.synapticWeights.dimorphicBias) +
+               (holes * this.synapticWeights.holesPenaltyWeight) +
+               (bumpiness * this.synapticWeights.bumpinessWeight);
     }
 
     findBestMove(grid, currentPiece) {
@@ -191,9 +180,147 @@ class TetrisGame {
         this.grid = Array.from({length: ROWS}, () => Array(COLS).fill(0));
         this.score = 0;
         this.spawnPiece();
+        this.draw();
     }
     spawnPiece() {
         this.pieceType = Math.floor(Math.random() * SHAPES.length);
         this.shape = SHAPES[this.pieceType];
         this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
-        this
+        this.y = 0;
+        if (this.checkCollision(0, 0, this.shape)) {
+            this.init();
+            return;
+        }
+        if (this.isAi) {
+            let move = flyConnectome.findBestMove(this.grid, this.shape);
+            for(let i=0; i<move.bestRot; i++) {
+                let rotated = this.shape[0].map((_, index) => this.shape.map(row => row[index]).reverse());
+                if (!this.checkCollision(0, 0, rotated)) this.shape = rotated;
+            }
+            this.x = move.bestX;
+        }
+    }
+    checkCollision(offsetX, offsetY, newShape) {
+        for (let r = 0; r < newShape.length; r++) {
+            for (let c = 0; c < newShape[r].length; c++) {
+                if (newShape[r][c]) {
+                    let newX = this.x + c + offsetX;
+                    let newY = this.y + r + offsetY;
+                    if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
+                    if (newY >= 0 && this.grid[newY][newX]) return true;
+                }
+            }
+        }
+        return false;
+    }
+    merge() {
+        this.shape.forEach((row, r) => {
+            row.forEach((val, c) => {
+                if (val && this.y + r >= 0) {
+                    this.grid[this.y + r][this.x + c] = this.pieceType + 1;
+                }
+            });
+        });
+        this.clearLines();
+        this.spawnPiece();
+    }
+    clearLines() {
+        let lines = 0;
+        this.grid = this.grid.filter(row => {
+            if (row.every(cell => cell !== 0)) {
+                lines++;
+                return false;
+            }
+            return true;
+        });
+        while (this.grid.length < ROWS) {
+            this.grid.unshift(Array(COLS).fill(0));
+        }
+        if (lines > 0) {
+            this.score += lines * 100;
+            this.scoreEl.innerText = this.score;
+        }
+    }
+    move(dir) {
+        if (!this.checkCollision(dir, 0, this.shape)) {
+            this.x += dir;
+            this.draw();
+        }
+    }
+    drop() {
+        if (!this.checkCollision(0, 1, this.shape)) {
+            this.y++;
+        } else {
+            this.merge();
+        }
+        this.draw();
+    }
+    rotate() {
+        let rotated = this.shape[0].map((_, index) => this.shape.map(row => row[index]).reverse());
+        if (!this.checkCollision(0, 0, rotated)) {
+            this.shape = rotated;
+            this.draw();
+        }
+    }
+    draw() {
+        this.ctx.fillStyle = '#000';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (this.grid[r][c]) {
+                    this.ctx.fillStyle = this.isAi ? '#f43f5e' : '#38bdf8';
+                    this.ctx.fillRect(c * 10, r * 10, 9, 9);
+                }
+            }
+        }
+        if (this.shape) {
+            this.shape.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    if (val && this.y + r >= 0) {
+                        this.ctx.fillStyle = this.isAi ? '#fda4af' : '#7dd3fc';
+                        this.ctx.fillRect((this.x + c) * 10, (this.y + r) * 10, 9, 9);
+                    }
+                });
+            });
+        }
+    }
+}
+
+let player = new TetrisGame('playerCanvas', 'playerScore', false);
+let flyAi = new TetrisGame('flyCanvas', 'flyScore', true);
+let gameInterval = null;
+
+function startBattle() {
+    document.getElementById('status').innerText = "🧠 MALE CNS v1.0: BATTLE ACTIVE";
+    player.init();
+    flyAi.init();
+    if (gameInterval) clearInterval(gameInterval);
+    
+    gameInterval = setInterval(() => {
+        player.drop();
+        flyAi.drop();
+    }, 500);
+}
+
+// タッチ・クリックイベントを確実に登録
+document.getElementById('btnStart').addEventListener('click', startBattle);
+document.getElementById('btnStart').addEventListener('touchstart', (e) => { e.preventDefault(); startBattle(); });
+
+document.getElementById('btnLeft').addEventListener('click', () => player.move(-1));
+document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); player.move(-1); });
+
+document.getElementById('btnRight').addEventListener('click', () => player.move(1));
+document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); player.move(1); });
+
+document.getElementById('btnDown').addEventListener('click', () => player.drop());
+document.getElementById('btnDown').addEventListener('touchstart', (e) => { e.preventDefault(); player.drop(); });
+
+document.getElementById('btnRot').addEventListener('click', () => player.rotate());
+document.getElementById('btnRot').addEventListener('touchstart', (e) => { e.preventDefault(); player.rotate(); });
+
+player.draw();
+flyAi.draw();
+</script>
+</body>
+</html>
