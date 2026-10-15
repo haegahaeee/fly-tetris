@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Male CNS Connectome Tetris</title>
+    <style>
+        body { background: #020617; color: #38bdf8; font-family: monospace; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; }
+        h1 { font-size: 0.9rem; text-align: center; margin: 5px 0; }
+        #status { font-size: 0.75rem; color: #f43f5e; font-weight: bold; margin-bottom: 8px; }
+        .container { display: flex; gap: 15px; margin-bottom: 10px; width: 100%; max-width: 400px; justify-content: center; }
+        .board-wrapper { border: 2px solid #38bdf8; padding: 6px; border-radius: 8px; text-align: center; background: rgba(56,189,248,0.05); flex: 1; }
+        canvas { background: #000; border: 1px solid #1e293b; display: block; width: 100%; max-width: 140px; height: auto; }
+        .controls { display: grid; grid-template-columns: repeat(3, 65px); gap: 6px; margin-top: 5px; }
+        button.ctrl { background: #0f172a; color: #38bdf8; border: 2px solid #38bdf8; padding: 10px; font-weight: bold; border-radius: 6px; }
+        .start-btn { grid-column: span 3; background: #f43f5e !important; border-color: #f43f5e !important; color: #fff !important; }
+    </style>
+</head>
+<body>
+    <h1>🧠 Male CNS vs HUMAN</h1>
+    <div id="status">STATUS: READY</div>
+    
+    <div class="container">
+        <div class="board-wrapper">
+            <div style="font-size:0.8rem; font-weight:bold;">YOU</div>
+            <canvas id="playerCanvas" width="100" height="200"></canvas>
+        </div>
+        <div class="board-wrapper" style="border-color:#f43f5e">
+            <div style="font-size:0.8rem; font-weight:bold; color:#f43f5e;">MALE CNS</div>
+            <canvas id="flyCanvas" width="100" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div></div>
+        <button class="ctrl" onclick="playerRotate()">🔄</button>
+        <div></div>
+        <button class="ctrl" onclick="playerLeft()">◀</button>
+        <button class="ctrl" onclick="playerDown()">▼</button>
+        <button class="ctrl" onclick="playerRight()">▶</button>
+        <button class="ctrl start-btn" onclick="startBattle()">START / RESTART</button>
+    </div>
+
+<script>
+function startBattle() {
+    document.getElementById('status').innerText = "BATTLE STARTED";
+}
+function playerLeft() {}
+function playerRight() {}
+function playerDown() {}
+function playerRotate() {}
+</script>
+</body>
+</html>
