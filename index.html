@@ -19,38 +19,40 @@
             touch-action: manipulation;
         }
 
-        /* スタート画面モーダル */
+        /* スタート画面モーダル（確実に最前面に表示） */
         #start-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 11, 20, 0.95);
+            background: #0b0b14;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 200;
+            z-index: 999;
         }
         #start-screen h1 {
             color: #bb86fc;
-            font-size: 2.2rem;
-            margin-bottom: 10px;
+            font-size: 2rem;
+            margin-bottom: 5px;
+            text-align: center;
             text-shadow: 0 0 15px rgba(187,134,252,0.5);
         }
         #start-screen p {
             color: #aaa;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
         }
         .mode-btn {
             background: linear-gradient(135deg, #6200ee, #bb86fc);
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 16px 30px;
             font-size: 1.1rem;
             font-weight: bold;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             margin: 10px;
-            width: 280px;
+            width: 300px;
             box-shadow: 0 4px 15px rgba(98, 0, 238, 0.4);
             transition: transform 0.1s;
         }
@@ -147,7 +149,7 @@
             background: #22223b;
             color: #bb86fc;
             border: 2px solid #bb86fc;
-            padding: 12px 0;
+            padding: 14px 0;
             font-size: 1.1rem;
             font-weight: bold;
             border-radius: 8px;
@@ -169,7 +171,7 @@
             border-radius: 15px;
             text-align: center;
             box-shadow: 0 0 40px rgba(187, 134, 252, 0.5);
-            z-index: 100;
+            z-index: 1000;
             width: 85%;
             max-width: 340px;
         }
@@ -189,7 +191,7 @@
 </head>
 <body>
 
-    <!-- スタート画面（モード選択） -->
+    <!-- スタート画面（確実に出現するモード選択メニュー） -->
     <div id="start-screen">
         <h1>FlyTris Battle Arena</h1>
         <p>Human vs. MaleCNS Connectome AI</p>
@@ -237,7 +239,7 @@
             </div>
         </div>
 
-        <!-- スマホ・タブレット用タッチ操作ボタン -->
+        <!-- スマホ・タブレット用タッチ操作ボタン（急降下に変更） -->
         <div class="controls">
             <div class="control-row">
                 <button class="ctrl-btn" onclick="playerMove('left')">◀ 左</button>
@@ -245,8 +247,8 @@
                 <button class="ctrl-btn" onclick="playerMove('right')">右 ▶</button>
             </div>
             <div class="control-row">
-                <button class="ctrl-btn" onclick="playerMove('down')" style="flex: 2;">⬇ ソフトドロップ</button>
-                <button class="ctrl-btn" onclick="playerHardDrop()" style="flex: 1; background: #6200ee;">⚡ ハード</button>
+                <button class="ctrl-btn" onclick="playerMove('down')" style="flex: 2;">⬇ ソフト</button>
+                <button class="ctrl-btn" onclick="playerQuickDrop()" style="flex: 1; background: #6200ee;">⚡ 急降下</button>
             </div>
         </div>
     </div>
@@ -260,7 +262,7 @@
 
 <script>
     // ⚠️ Python側（Colab等）の ngrok 公開リンクに書き換えてください
-    const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+    const BACKEND_URL = "https://YOUR_NGROK_URL_HERE/predict";
 
     const ROWS = 20;
     const COLS = 10;
@@ -280,13 +282,12 @@
         [[0,5,5],[5,5,0],[0,0,0]],                  // S
         [[0,6,0],[6,6,6],[0,0,0]],                  // T
         [[7,7,0],[0,7,7],[0,0,0]],                  // Z
-        [[8]]                                       // 8: 妨害ブロック (ガチ対戦用)
+        [[8]]                                       // 8: 妨害ブロック
     ];
 
-    let gameMode = 'normal'; // 'normal', 'quick', 'gachi'
+    let gameMode = 'normal';
     let gameInterval = null;
-    let aiLoopTimeout = null;
-    let timerSeconds = 90; // クイック対戦用 (1分半)
+    let timerSeconds = 90;
     let timerInterval = null;
     let gameOver = false;
 
@@ -356,7 +357,6 @@
         }
 
         drawSideBoxes() {
-            // NEXT描画 (3つ表示)
             this.nextCtx.fillStyle = '#0f0f17';
             this.nextCtx.fillRect(0, 0, 50, 150);
             for (let i = 0; i < 3; i++) {
@@ -374,7 +374,6 @@
                 }
             }
 
-            // HOLD描画
             this.holdCtx.fillStyle = '#0f0f17';
             this.holdCtx.fillRect(0, 0, 50, 50);
             if (this.holdPiece) {
@@ -411,7 +410,7 @@
                 for (let c = 0; c < shape[r].length; c++) {
                     if (shape[r][c] > 0) {
                         if (this.currentPiece.y + r < 0) {
-                            triggerGameOver(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
+                            triggerResultModal(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
                             return;
                         }
                         this.grid[this.currentPiece.y + r][this.currentPiece.x + c] = this.currentPiece.typeId;
@@ -422,7 +421,7 @@
             this.currentPiece = this.spawnPiece();
             this.canHold = true;
             if (this.checkCollision(this.currentPiece.x, this.currentPiece.y, this.currentPiece.shape)) {
-                triggerGameOver(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
+                triggerResultModal(this.isAI ? "Player Win! (Fly Topped Out)" : "Fly Win! (Player Topped Out)");
             }
         }
 
@@ -444,7 +443,6 @@
                 if (this.isAI) {
                     this.aiReward = linesCleared * 15.0;
                 } else {
-                    // プレイヤーがラインを消したら、ガチ対戦モードなら相手に妨害ブロックを送り込む！
                     if (gameMode === 'gachi' && linesCleared >= 2) {
                         ai.injectGarbage(linesCleared - 1);
                     }
@@ -458,32 +456,10 @@
             for (let i = 0; i < count; i++) {
                 this.grid.shift();
                 let garbageRow = Array(COLS).fill(8);
-                // ランダムに1箇所だけ穴を開ける
                 let emptyCol = Math.floor(Math.random() * COLS);
                 garbageRow[emptyCol] = 0;
                 this.grid.push(garbageRow);
             }
-            this.draw();
-        }
-
-        hold() {
-            if (!this.canHold || gameOver) return;
-            if (this.holdPiece === null) {
-                this.holdPiece = this.currentPiece.typeId;
-                this.currentPiece = this.spawnPiece();
-            } else {
-                let temp = this.currentPiece.typeId;
-                this.currentPiece = {
-                    shape: SHAPES[this.holdPiece],
-                    typeId: this.holdPiece,
-                    x: Math.floor(COLS / 2) - Math.floor(SHAPES[this.holdPiece][0].length / 2),
-                    y: 0,
-                    rot: 0
-                };
-                this.holdPiece = temp;
-            }
-            this.canHold = false;
-            this.drawSideBoxes();
             this.draw();
         }
 
@@ -497,12 +473,14 @@
             this.draw();
         }
 
-        hardDrop() {
+        quickDrop() {
             if (gameOver) return;
+            let dropped = 0;
             while (!this.checkCollision(this.currentPiece.x, this.currentPiece.y + 1, this.currentPiece.shape)) {
                 this.currentPiece.y++;
-                this.score += 2; // ハードドロップボーナス
+                dropped++;
             }
+            this.score += dropped; // 急降下ボーナス
             this.scoreElement.innerText = this.score;
             this.merge();
             this.draw();
@@ -523,7 +501,6 @@
             startTimer();
         } else if (mode === 'gachi') {
             modeName = "ガチ対戦 (妨害ミノ有)";
-            // ガチ対戦では30秒ごとに定期妨害
             setInterval(() => {
                 if (!gameOver) {
                     player.injectGarbage(1);
@@ -536,7 +513,6 @@
         player.draw();
         ai.draw();
         
-        // 落下ループ
         gameInterval = setInterval(() => {
             if (!gameOver) player.moveDown();
         }, 500);
@@ -553,14 +529,12 @@
             document.getElementById('timer-display').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             if (timerSeconds <= 0) {
                 clearInterval(timerInterval);
-                // タイムアップ時の勝敗判定（スコア勝負）
                 let resultMsg = player.score > ai.score ? "Time Up! Player Win (Higher Score)" : "Time Up! Fly Win (Higher Score)";
                 triggerResultModal(resultMsg);
             }
         }, 1000);
     }
 
-    // 操作用ヘルパー
     function playerMove(dir) {
         if (gameOver) return;
         if (dir === 'left') {
@@ -583,22 +557,20 @@
         player.draw();
     }
 
-    function playerHardDrop() {
-        player.hardDrop();
+    function playerQuickDrop() {
+        player.quickDrop();
     }
 
-    // キーボード操作対応
     document.addEventListener('keydown', e => {
         if (gameOver || document.getElementById('start-screen').style.display !== 'none') return;
         if (e.key === 'ArrowLeft') playerMove('left');
         else if (e.key === 'ArrowRight') playerMove('right');
         else if (e.key === 'ArrowDown') playerMove('down');
         else if (e.key === 'ArrowUp') playerRotate();
-        else if (e.key === ' ') playerHardDrop();
+        else if (e.key === ' ') playerQuickDrop();
         else if (e.key === 'c' || e.key === 'C') player.hold();
     });
 
-    // ハエAIの思考ループ（ngrok警告バイパス付き）
     async function aiLoop() {
         if (gameOver) return;
         try {
