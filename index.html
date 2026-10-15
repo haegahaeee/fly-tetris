@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Fly-Brain Tetris - Touch & Battle Edition</title>
+    <title>Fly-Brain Tetris - Side-by-Side Battle</title>
     <style>
         * {
             box-sizing: border-box;
@@ -19,73 +19,77 @@
             justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
-            padding: 10px;
+            padding: 5px;
             overflow-x: hidden;
             user-select: none;
         }
         h1 {
-            margin: 5px 0;
-            font-size: 1.2rem;
+            margin: 4px 0;
+            font-size: 1.1rem;
             color: #38bdf8;
             text-align: center;
         }
         .mode-selector {
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
         .mode-btn {
             background: #1e293b;
             color: #94a3b8;
             border: 1px solid #475569;
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
         .mode-btn.active {
             background: #0284c7;
             color: white;
             border-color: #38bdf8;
         }
+        /* 常に左右に並べるコンテナ設定 */
         .battle-container {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: row;
             justify-content: center;
-            gap: 10px;
+            align-items: stretch;
+            gap: 6px;
             background: #111827;
-            padding: 10px;
+            padding: 8px;
             border-radius: 12px;
             border: 1px solid #1f2937;
             width: 100%;
-            max-width: 800px;
+            max-width: 600px;
         }
         .player-side, .ai-side {
             display: flex;
-            gap: 6px;
+            gap: 4px;
+            flex: 1;
+            justify-content: center;
         }
         .side-panel {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            width: 65px;
+            gap: 4px;
+            width: 45px;
         }
         .panel-box {
             background: #030712;
             border: 1px solid #374151;
-            border-radius: 6px;
-            padding: 4px;
+            border-radius: 4px;
+            padding: 2px;
             text-align: center;
         }
         .panel-box h3 {
             margin: 0 0 2px 0;
-            font-size: 0.65rem;
+            font-size: 0.55rem;
             color: #9ca3af;
         }
         canvas.mini-canvas {
             background: #000;
-            border-radius: 4px;
+            border-radius: 2px;
             display: block;
             margin: 0 auto;
         }
@@ -93,14 +97,14 @@
             position: relative;
             background: #000;
             border: 2px solid #374151;
-            border-radius: 6px;
+            border-radius: 4px;
         }
         .board-wrapper.player-board { border-color: #38bdf8; }
         .board-wrapper.ai-board { border-color: #ec4899; }
         
         .board-title {
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: bold;
             margin-bottom: 2px;
         }
@@ -110,31 +114,30 @@
         .control-panel {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            width: 100%;
-            max-width: 160px;
+            gap: 4px;
+            width: 75px;
             justify-content: space-between;
         }
         .info-box {
             background: #030712;
             border: 1px solid #38bdf8;
-            border-radius: 6px;
-            padding: 6px;
+            border-radius: 4px;
+            padding: 4px;
             text-align: center;
         }
-        .info-box h3 { margin: 0; font-size: 0.65rem; color: #9ca3af; }
-        .info-box p { margin: 2px 0 0 0; font-size: 1rem; font-weight: bold; color: #facc15; }
+        .info-box h3 { margin: 0; font-size: 0.55rem; color: #9ca3af; }
+        .info-box p { margin: 2px 0 0 0; font-size: 0.85rem; font-weight: bold; color: #facc15; }
 
         .btn-start {
             background: #0284c7;
             color: white;
             border: none;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 6px;
+            border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
         }
         .btn-start:active { background: #0ea5e9; }
 
@@ -142,23 +145,23 @@
         .touch-controls {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
-            max-width: 400px;
-            margin-top: 10px;
+            max-width: 450px;
+            margin-top: 8px;
         }
         .touch-row {
             display: flex;
             justify-content: space-between;
-            gap: 8px;
+            gap: 6px;
         }
         .t-btn {
             background: #1e293b;
             color: #f8fafc;
             border: 1px solid #475569;
             border-radius: 8px;
-            padding: 14px;
-            font-size: 1.1rem;
+            padding: 12px;
+            font-size: 1rem;
             font-weight: bold;
             flex: 1;
             text-align: center;
@@ -213,24 +216,25 @@
             <div class="side-panel">
                 <div class="panel-box">
                     <h3>HOLD</h3>
-                    <canvas id="playerHold" width="45" height="45" class="mini-canvas"></canvas>
+                    <canvas id="playerHold" width="35" height="35" class="mini-canvas"></canvas>
                 </div>
                 <div class="panel-box" style="flex-grow:1;">
                     <h3>STATS</h3>
-                    <p id="playerLines" style="font-size:0.65rem; color:#38bdf8; margin:4px 0;">Lines: 0</p>
-                    <p id="timerDisplay" style="font-size:0.65rem; color:#facc15; margin:4px 0;">Time: ∞</p>
+                    <p id="playerLines" style="font-size:0.55rem; color:#38bdf8; margin:2px 0;">L: 0</p>
+                    <p id="timerDisplay" style="font-size:0.55rem; color:#facc15; margin:2px 0;">∞</p>
                 </div>
             </div>
             <div>
                 <div class="board-title player-title">YOU</div>
                 <div class="board-wrapper player-board">
-                    <canvas id="playerCanvas" width="160" height="352"></canvas>
+                    <!-- スマホの横幅に収まるようボード幅を120pxに調整 -->
+                    <canvas id="playerCanvas" width="120" height="264"></canvas>
                 </div>
             </div>
             <div class="side-panel">
-                <div class="panel-box" style="height: 120px;">
+                <div class="panel-box" style="height: 100px;">
                     <h3>NEXT</h3>
-                    <canvas id="playerNext" width="45" height="100" class="mini-canvas"></canvas>
+                    <canvas id="playerNext" width="35" height="85" class="mini-canvas"></canvas>
                 </div>
             </div>
         </div>
@@ -243,9 +247,9 @@
             </div>
             <div class="info-box">
                 <h3>AI STATUS</h3>
-                <p id="aiState" style="font-size: 0.7rem; color: #ec4899;">Standby</p>
+                <p id="aiState" style="font-size: 0.6rem; color: #ec4899;">Standby</p>
             </div>
-            <button class="btn-start" onclick="startBattle()">START BATTLE</button>
+            <button class="btn-start" onclick="startBattle()">START</button>
         </div>
 
         <!-- ハエAI側 -->
@@ -253,17 +257,17 @@
             <div>
                 <div class="board-title ai-title">FLY AI</div>
                 <div class="board-wrapper ai-board">
-                    <canvas id="aiCanvas" width="160" height="352"></canvas>
+                    <canvas id="aiCanvas" width="120" height="264"></canvas>
                 </div>
             </div>
             <div class="side-panel">
-                <div class="panel-box" style="height: 120px;">
+                <div class="panel-box" style="height: 100px;">
                     <h3>AI NEXT</h3>
-                    <canvas id="aiNext" width="45" height="100" class="mini-canvas"></canvas>
+                    <canvas id="aiNext" width="35" height="85" class="mini-canvas"></canvas>
                 </div>
                 <div class="panel-box" style="flex-grow:1;">
                     <h3>AI STATS</h3>
-                    <p id="aiLines" style="font-size:0.65rem; color:#ec4899; margin:4px 0;">Lines: 0</p>
+                    <p id="aiLines" style="font-size:0.55rem; color:#ec4899; margin:2px 0;">L: 0</p>
                 </div>
             </div>
         </div>
@@ -298,10 +302,9 @@
     </div>
 
     <script>
-        // 指定された ngrok URLを直書き込み
         const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev/predict";
 
-        const scale = 16;
+        const scale = 12; // スマホ横並び用に1ブロックを12pxに調整
         const ROWS = 22;
         const COLS = 10;
 
@@ -371,12 +374,12 @@
             mCtx.fillStyle = '#030712';
             mCtx.fillRect(0, 0, canvasEl.width, canvasEl.height);
             if (!matrix) return;
-            const mScale = 10;
+            const mScale = 8;
             matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) {
                         mCtx.fillStyle = COLORS[colorIdx || value];
-                        mCtx.fillRect(x * mScale + 2, y * mScale + 2, mScale, mScale);
+                        mCtx.fillRect(x * mScale + 1, y * mScale + 1, mScale, mScale);
                     }
                 });
             });
@@ -388,12 +391,12 @@
             mCtx.fillRect(0, 0, canvasEl.width, canvasEl.height);
             queue.forEach((matrix, idx) => {
                 if (!matrix) return;
-                const mScale = 8;
+                const mScale = 6;
                 matrix.forEach((row, y) => {
                     row.forEach((value, x) => {
                         if (value !== 0) {
                             mCtx.fillStyle = COLORS[value];
-                            mCtx.fillRect(x * mScale + 2, y * mScale + (idx * 30) + 2, mScale, mScale);
+                            mCtx.fillRect(x * mScale + 1, y * mScale + (idx * 24) + 1, mScale, mScale);
                         }
                     });
                 });
@@ -534,11 +537,11 @@
                 document.getElementById('score').innerText = score;
                 if (target === 'player') {
                     player.lines += cleared;
-                    document.getElementById('playerLines').innerText = `Lines: ${player.lines}`;
+                    document.getElementById('playerLines').innerText = `L: ${player.lines}`;
                     if (gameMode === 'gachi' && cleared >= 2) sendGarbageToAI(cleared - 1);
                 } else {
                     ai.lines += cleared;
-                    document.getElementById('aiLines').innerText = `Lines: ${ai.lines}`;
+                    document.getElementById('aiLines').innerText = `L: ${ai.lines}`;
                     if (gameMode === 'gachi' && cleared >= 2) sendGarbageToPlayer(cleared - 1);
                 }
             }
@@ -565,7 +568,7 @@
         async function aiStep() {
             if (!battleActive) return;
             try {
-                document.getElementById('aiState').innerText = "Thinking...";
+                document.getElementById('aiState').innerText = "Thinking";
                 const res = await fetch(`${BACKEND_URL}/predict`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -606,7 +609,6 @@
             }
         }
 
-        // キーボード入力サポート（PC用）
         window.addEventListener('keydown', e => {
             if (!battleActive) return;
             if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', ' '].includes(e.key)) e.preventDefault();
@@ -640,8 +642,8 @@
             ai.lines = 0;
             score = 0;
             document.getElementById('score').innerText = "0";
-            document.getElementById('playerLines').innerText = "Lines: 0";
-            document.getElementById('aiLines').innerText = "Lines: 0";
+            document.getElementById('playerLines').innerText = "L: 0";
+            document.getElementById('aiLines').innerText = "L: 0";
             
             playerNextQueue = [];
             aiNextQueue = [];
@@ -660,7 +662,7 @@
                 clearInterval(timerInterval);
                 timerInterval = setInterval(() => {
                     gameTimer--;
-                    document.getElementById('timerDisplay').innerText = `Time: ${gameTimer}s`;
+                    document.getElementById('timerDisplay').innerText = `${gameTimer}s`;
                     if (gameTimer <= 0) {
                         clearInterval(timerInterval);
                         const winner = player.lines >= ai.lines ? 'YOU WIN!' : 'AI WIN!';
@@ -668,7 +670,7 @@
                     }
                 }, 1000);
             } else {
-                document.getElementById('timerDisplay').innerText = `Time: ∞`;
+                document.getElementById('timerDisplay').innerText = `∞`;
             }
         }
 
