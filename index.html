@@ -122,17 +122,19 @@
             font-size: 0.55rem;
             color: #888;
         }
+        
+        /* キャンバスの解像度と表示サイズを完全一致させる（真っ黒バグの解消） */
         canvas.mini-canvas {
             background: #000;
             display: block;
             margin: 1px auto 0 auto;
-            width: 28px;
-            height: 28px;
+            width: 36px;
+            height: 36px;
         }
-        #playerNextCanvas, #aiNextCanvas {
-            height: 70px !important;
+        .next-canvas {
+            width: 36px !important;
+            height: 108px !important;
         }
-        
         .main-board {
             border: 2px solid #444;
             background-color: #000;
@@ -140,6 +142,7 @@
             width: 120px;
             height: 240px;
         }
+
         .panel-title {
             text-align: center;
             font-weight: bold;
@@ -212,11 +215,11 @@
 
         @media (min-width: 768px) {
             body { padding: 20px; overflow: auto; }
-            .battle-arena { max-width: 560px; padding: 15px; gap: 15px; }
-            .top-bar { max-width: 560px; font-size: 1.1rem; }
-            .main-board { width: 160px; height: 320px; }
-            canvas.mini-canvas { width: 40px; height: 40px; }
-            #playerNextCanvas, #aiNextCanvas { height: 120px !important; }
+            .battle-arena { max-width: 600px; padding: 15px; gap: 15px; }
+            .top-bar { max-width: 600px; font-size: 1.1rem; }
+            .main-board { width: 180px; height: 360px; }
+            .mini-canvas { width: 45px !important; height: 45px !important; }
+            .next-canvas { width: 45px !important; height: 135px !important; }
             .panel-title { font-size: 0.95rem; }
             .score-board { font-size: 0.95rem; }
             .mini-container { font-size: 0.75rem; }
@@ -254,7 +257,7 @@
                     <div class="score-board"><span id="playerScore">0</span></div>
                 </div>
                 <div class="side-box">
-                    <div class="mini-container">NEXT<canvas id="playerNextCanvas" width="40" height="120" class="mini-canvas"></canvas></div>
+                    <div class="mini-container">NEXT<canvas id="playerNextCanvas" width="40" height="120" class="mini-canvas next-canvas"></canvas></div>
                 </div>
             </div>
 
@@ -269,7 +272,7 @@
                     <div class="score-board"><span id="aiScore">0</span></div>
                 </div>
                 <div class="side-box">
-                    <div class="mini-container">NEXT<canvas id="aiNextCanvas" width="40" height="120" class="mini-canvas"></canvas></div>
+                    <div class="mini-container">NEXT<canvas id="aiNextCanvas" width="40" height="120" class="mini-canvas next-canvas"></canvas></div>
                 </div>
             </div>
         </div>
@@ -297,7 +300,7 @@
 
 <script>
     // ⚠️ Python側（Colab等）の ngrok 公開リンクに書き換えてください
-    const BACKEND_URL = "https://headphone-dipper-graffiti.ngrok-free.dev";
+    const BACKEND_URL = "https://YOUR_NGROK_URL_HERE/predict";
 
     const ROWS = 20;
     const COLS = 10;
@@ -529,7 +532,6 @@
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'flex';
         
-        // ゲームインスタンスをここで確実に生成して初期化
         player = new TetrisGame('playerCanvas', 'playerScore', 'playerNextCanvas', 'playerHoldCanvas', false);
         ai = new TetrisGame('aiCanvas', 'aiScore', 'aiNextCanvas', 'aiHoldCanvas', true);
 
